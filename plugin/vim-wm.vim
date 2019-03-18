@@ -85,6 +85,5 @@ endfun
 call s:init()
 
 command! VwmRefresh call s:init()
-
 command! -nargs=1 VwmOpen call vwm#open(<q-args>)
 command! -nargs=1 VwmClose call vwm#close(<q-args>)

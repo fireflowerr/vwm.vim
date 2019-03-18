@@ -39,7 +39,6 @@ fun! vwm#open(name)
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
 
   if s:node_has_child(l:node, 'left')
-    echo "should not see anything here"
     let l:mod = l:node.abs ? 'to' : ''
     execute('vert ' . l:mod . ' ' . l:node.bot.sz . 'new')
     let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left, l:node.unlisted)
