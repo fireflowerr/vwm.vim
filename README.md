@@ -1,7 +1,7 @@
 # *V*im *W*indow *M*anager 
 
 A layout manager for vim and nvim.
-![](./.github/expose.gif?raw=true "VWM")
+![](expose.gif)
 
 ## Features
 
