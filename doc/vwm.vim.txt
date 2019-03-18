@@ -1,0 +1,95 @@
+*vwm.vim.txt*
+                                                                      *vwm.vim*
+
+==============================================================================
+CONTENTS                                                    *vwm.vim-contents*
+  1. Commands...............................................|vwm.vim-commands|
+  2. Configuration.....................................|vwm.vim-configuration|
+==============================================================================
+COMMANDS                                                    *vwm.vim-commands*
+
+:VwmOpen {name}                                                     *:VwmOpen*
+  Opens the layout specified by {name}
+
+:VwmClose {name}                                                   *:VwmClose*
+  Closes the layout specified by {name}
+
+:VwmRefresh
+  Reinitializes the layout definitions defined in |g:vwm#layouts|
+==============================================================================
+CONFIGURATION                                          *vwm.vim-configuration*
+
+g:vwm#layouts                                                  *g:vwm#layouts*
+  A list containing layouts accessible to this plugin. See |vwm-layouts| and
+  |vwm-layouts-example|.
+  NOTE: Windows are created from layouts using a depth first traversal of the
+  layout definition. The order of depths traversed is as follows: left ->
+  right -> top -> bot.
+
+vwm-layouts                                                      *vwm-layouts*
+
+                                                            *vwm-layouts-root*
+  Each layout consists of a root node and 1 or more child nodes, where each
+  node is a dictionary. A root node contains the following attributes:
+
+  {name}: The name of a layout definition. Used in |:VwmOpen| and |:VwmClose|
+
+  {left}[opt]: Layouts originating from the left, relative or absolute.
+
+  {right}[opt]: Layouts originating from the right, relative or absolute.
+
+  {top}[opt]: Layouts originating from the top, relative or absolute.
+
+  {bot}[opt]: Layouts originating from the bot, relative or absolute.
+
+  {abs}[default=1]: If true, seed layouts from absolute position (as opposed
+  to relative from the active window)
+
+  {cache}[default=1]: If true, save buffers closed with |:VwmClose| and
+  attempt to reuse cached buffer when |:VwmOpen| is next called.
+
+  {unlisted}[default=1]: Requires {cache}. If true, cached buffers will be
+  made unlisted.
+
+                                                           *vwm-layouts-child*
+  Each child node consits of itself and 0 more child nodes. A cihld node
+  contains the following attributes.
+
+  {'init'}: A list of commands to run on buffer creation.
+
+  {'restore'}[opt]: A list of commands to run on buffer restoration.
+
+  {'sz'}[opt]: The size of the window. Default to half of the current window.
+
+  {left}[opt]: Layout left relative of this layout.
+
+  {right}[opt]: Layout right relative of this layout.
+
+  {top}[opt]: Layout top relative of this layout.
+
+  {bot}[opt]: Layout bot relative of this layout.
+
+                                                         *vwm-layouts-example*
+  The following example will create 3 equally sized windows of height 12 at
+  the bottom of the vim screen.         >
+
+      let g:vwm#layouts = [
+            \  {
+            \    'name': 'test',
+            \    'bot':
+            \    {
+            \      'init': ['normal iI am in the middle'],
+            \      'sz': 12,
+            \      'left': 
+            \      {
+            \        'init': ['normal iI am on the left'],
+            \      },
+            \      'right':
+            \      {
+            \        'init': ['normal iI am on the right'],
+            \      }
+            \    }
+            \  }
+            \]
+    
+    
