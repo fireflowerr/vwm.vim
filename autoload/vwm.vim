@@ -42,48 +42,51 @@ fun! vwm#open(name)
     echo "should not see anything here"
     let l:mod = l:node.abs ? 'to' : ''
     execute('vert ' . l:mod . ' ' . l:node.bot.sz . 'new')
-    let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left)
+    let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left, l:node.unlisted)
   endif
   if s:node_has_child(l:node, 'right')
     let l:mod = l:node.abs ? 'bo' : 'bel'
     execute('vert ' . l:mod . ' ' . l:node.bot.sz . 'new')
-    let g:vwm#layouts[l:nodeIndex].right = s:open_main(l:node.right)
+    let g:vwm#layouts[l:nodeIndex].right = s:open_main(l:node.right, l:node.unlisted)
   endif
   if s:node_has_child(l:node, 'top')
     let l:mod = l:node.abs ? 'to' : ''
     execute(l:mod . ' ' . l:node.bot.sz . 'new')
-    let g:vwm#layouts[l:nodeIndex].top = s:open_main(l:node.top)
+    let g:vwm#layouts[l:nodeIndex].top = s:open_main(l:node.top, l:node.unlisted)
   endif
   if s:node_has_child(l:node, 'bot')
     let l:mod = l:node.abs ? 'bo' : 'bel'
     execute(l:mod . ' ' . l:node.bot.sz . 'new')
-    let g:vwm#layouts[l:nodeIndex].bot = s:open_main(l:node.bot)
+    let g:vwm#layouts[l:nodeIndex].bot = s:open_main(l:node.bot, l:node.unlisted)
   endif
 endfun
 
-fun! s:open_main(node)
+fun! s:open_main(node, unlisted)
   let l:commands = s:buf_exists(a:node.bid) ? a:node.restore : a:node.init
   let l:node = a:node
   let l:node.bid = s:place_content(a:node)
+  if a:unlisted
+    setlocal nobuflisted
+  endif
 
   if s:node_has_child(a:node, 'left')
     execute('vert ' . a:node.left.sz . 'new')
-    let l:node.left = s:open_main(a:node.left)
+    let l:node.left = s:open_main(a:node.left, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'right')
     execute('vert belowright ' . a:node.right.sz . 'new')
-    let l:node.right = s:open_main(a:node.right)
+    let l:node.right = s:open_main(a:node.right, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'top')
     execute(a:node.top.sz . 'new')
-    let l:node.top = s:open_main(a:node.top)
+    let l:node.top = s:open_main(a:node.top, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'bot')
     execute('belowright ' . a:node.bot.sz . 'new')
-    let l:node.bot = s:open_main(a:node.bot)
+    let l:node.bot = s:open_main(a:node.bot, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   return l:node

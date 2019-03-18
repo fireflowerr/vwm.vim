@@ -48,9 +48,8 @@ vwm-layouts                                                      *vwm-layouts*
   {cache}[default=1]: If true, save buffers closed with |:VwmClose| and
   attempt to reuse cached buffer when |:VwmOpen| is next called.
 
-  {unlisted}[default=1]: Requires {cache}. If true, cached buffers will be
+  {unlisted}[default=1]: If true, all buffers derived from this layout will be
   made unlisted.
-
                                                            *vwm-layouts-child*
   Each child node consits of itself and 0 more child nodes. A cihld node
   contains the following attributes.
