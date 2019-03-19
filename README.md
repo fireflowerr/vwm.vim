@@ -23,7 +23,8 @@ A layout manager for vim and nvim.
 
 ## Example
   
-**_note:_** For detailed configuration see `help: vwm.vim`
+**_note:_** For detailed configuration see `help: vwm.vim`, for more examples see `:help
+vwm.vim-examples`
 
 The following example will create 3 equally sized terminals of height 12 at the bottom of the vim
   screen on **neovim**.

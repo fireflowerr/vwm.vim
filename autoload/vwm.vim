@@ -1,7 +1,11 @@
 " Main plugin logic
 
 fun! vwm#close(name)
-  let l:node = g:vwm#layouts[s:lookup_node(a:name)]
+  let l:node_index = s:lookup_node(a:name)
+  if l:node_index == -1
+    return -1
+  endif
+  let l:node = g:vwm#layouts[l:node_index]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
 endfun
 
@@ -35,24 +39,40 @@ endfun
 
 fun! vwm#open(name)
   let l:nodeIndex = s:lookup_node(a:name)
+  if l:nodeIndex == -1
+    return -1
+  endif
   let l:node = g:vwm#layouts[l:nodeIndex]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
+  if l:node.unlisted
+    setlocal nobuflisted
+  endif
+  let l:bid = bufwinnr('%')
 
   if s:node_has_child(l:node, 'left')
     let l:mod = l:node.abs ? 'to' : ''
-    execute('vert ' . l:mod . ' ' . l:node.bot.sz . 'new')
+    execute('vert ' . l:mod . ' ' . 'new')
+    if l:node.left.sz
+      execute(l:node.left.sz . 'wincmd |')
+    endif
     let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left, l:node.unlisted)
   endif
+  execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'right')
     let l:mod = l:node.abs ? 'bo' : 'bel'
-    execute('vert ' . l:mod . ' ' . l:node.bot.sz . 'new')
+    execute('vert ' . l:mod . ' ' . 'new')
+    if l:node.right.sz
+      execute(l:node.right.sz . 'wincmd |')
+    endif
     let g:vwm#layouts[l:nodeIndex].right = s:open_main(l:node.right, l:node.unlisted)
   endif
+  execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'top')
     let l:mod = l:node.abs ? 'to' : ''
     execute(l:mod . ' ' . l:node.bot.sz . 'new')
     let g:vwm#layouts[l:nodeIndex].top = s:open_main(l:node.top, l:node.unlisted)
   endif
+  execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'bot')
     let l:mod = l:node.abs ? 'bo' : 'bel'
     execute(l:mod . ' ' . l:node.bot.sz . 'new')
@@ -69,12 +89,18 @@ fun! s:open_main(node, unlisted)
   endif
 
   if s:node_has_child(a:node, 'left')
-    execute('vert ' . a:node.left.sz . 'new')
+    execute('vert ' . 'new')
+    if l:node.left.sz
+      execute(l:node.left.sz . 'wincmd |')
+    endif
     let l:node.left = s:open_main(a:node.left, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'right')
-    execute('vert belowright ' . a:node.right.sz . 'new')
+    execute('vert belowright ' . 'new')
+    if l:node.right.sz
+      execute(l:node.right.sz . 'wincmd |')
+    endif
     let l:node.right = s:open_main(a:node.right, a:unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
