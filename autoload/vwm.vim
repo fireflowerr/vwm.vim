@@ -5,6 +5,7 @@ fun! vwm#close(name)
   if l:node_index == -1
     return -1
   endif
+  let g:vwm#layouts[l:node_index].active = 0
   let l:node = g:vwm#layouts[l:node_index]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
 endfun
@@ -42,6 +43,7 @@ fun! vwm#open(name)
   if l:nodeIndex == -1
     return -1
   endif
+  let g:vwm#layouts[l:nodeIndex].active = 1
   let l:node = g:vwm#layouts[l:nodeIndex]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
   let l:bid = bufwinnr('%')
@@ -112,6 +114,20 @@ fun! s:open_main(node, unlisted)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   return l:node
+endfun
+
+fun! vwm#toggle(name)
+  let l:nodeIndex = s:lookup_node(a:name)
+  if l:nodeIndex == -1
+    return -1
+  endif
+  let l:node = g:vwm#layouts[l:nodeIndex]
+
+  if l:node.active
+    call vwm#close(a:name)
+  else
+    call vwm#open(a:name)
+  endif
 endfun
 
 fun! s:place_content(node)
