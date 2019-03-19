@@ -16,7 +16,7 @@ endfun
 fun! s:normalize_node(node)
   let l:node = a:node
   if !exists('a:node.sz')
-    let l:node['sz'] = ''
+    let l:node['sz'] = 0
   endif
   if !exists('a:node.bid')
     let l:node['bid'] = -1
