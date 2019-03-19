@@ -10,7 +10,7 @@ fun! s:validate(node)
 endfun
 
 fun! s:node_is_valid(node)
-  return len(a:node) == 12 ? 1 : 0
+  return len(a:node) == 13 ? 1 : 0
 endfun
 
 fun! s:normalize_node(node)
@@ -38,6 +38,9 @@ fun! s:normalize_node(node)
   endif
   if !exists('a:node.abs')
     let l:node['abs'] = 1
+  endif
+  if !exists('a:node.active')
+    let l:node['active'] = 0
   endif
   if s:node_has_child(a:node, 'left')
     call s:normalize_node(a:node.left)
@@ -87,3 +90,4 @@ call s:init()
 command! VwmRefresh call s:init()
 command! -nargs=1 VwmOpen call vwm#open(<q-args>)
 command! -nargs=1 VwmClose call vwm#close(<q-args>)
+command! -nargs=1 VwmToggle call vwm#toggle(<q-args>)
