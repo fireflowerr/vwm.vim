@@ -44,9 +44,6 @@ fun! vwm#open(name)
   endif
   let l:node = g:vwm#layouts[l:nodeIndex]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
-  if l:node.unlisted
-    setlocal nobuflisted
-  endif
   let l:bid = bufwinnr('%')
 
   if s:node_has_child(l:node, 'left')
