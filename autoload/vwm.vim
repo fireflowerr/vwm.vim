@@ -71,12 +71,12 @@ fun! vwm#open(name)
     execute(l:mod . ' ' . 'new')
     let g:vwm#layouts[l:nodeIndex].bot = s:open_main(l:node.bot, l:node.unlisted, 0)
   endif
+  execute(bufwinnr(l:bid) . 'wincmd w')
 endfun
 
 fun! s:open_main(node, unlisted, isVert)
   let l:node = a:node
   let l:node.bid = s:place_content(a:node)
-  call s:format_winnode(a:node, a:unlisted, a:isVert) 
 
   if s:node_has_child(a:node, 'left')
     vert new
@@ -98,6 +98,7 @@ fun! s:open_main(node, unlisted, isVert)
     let l:node.bot = s:open_main(a:node.bot, a:unlisted, 0)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
+  call s:format_winnode(a:node, a:unlisted, a:isVert) 
   return l:node
 endfun
 
@@ -116,16 +117,27 @@ fun! vwm#toggle(name)
 endfun
 
 fun! s:place_content(node)
-  let l:commands = a:node.init
+  let l:init_buf = bufnr('%')
+  let l:init_wid = bufwinnr(l:init_buf)
   if s:buf_exists(a:node.bid)
-    let l:to_del = bufnr('%')
     execute(a:node.bid . 'b')
-    execute(bufnr('#') . 'bw')
-    let l:commands = a:node.restore 
+    execute(l:init_buf . 'bw')
+    for cmd in a:node.restore
+      execute(cmd)
+    endfor
+    return bufnr('%')
   endif
-  for cmd in l:commands
+  for cmd in a:node.init
     execute(cmd)
   endfor
+  let l:final_buf = bufnr('$')
+  let l:final_wid = bufwinnr(l:final_buf)
+  if l:init_wid != l:final_wid
+    execute(l:final_wid . 'wincmd w')
+    wincmd c
+    execute(l:init_wid . 'wincmd w')
+    execute(l:final_buf . 'b')
+  endif
   return bufnr('%')
 endfun
 
