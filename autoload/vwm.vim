@@ -137,6 +137,7 @@ fun! s:place_content(node)
     wincmd c
     execute(l:init_wid . 'wincmd w')
     execute(l:final_buf . 'b')
+    execute(l:init_buf . 'bw')
   endif
   return bufnr('%')
 endfun

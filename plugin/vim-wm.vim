@@ -1,3 +1,16 @@
+let s:def_layt = {
+      \  'name': 'default',
+      \  'bot': 
+      \  {
+      \    'sz': 12,
+      \    'init': ['setlocal nonumber', 'term bash'],
+      \    'left': 
+      \    {
+      \      'init': ['setlocal nonumber','term bash']
+      \    }
+      \  }
+      \}
+
 fun! s:normalize_node(node)
   let l:node = a:node
   if !exists('a:node.sz')
@@ -66,11 +79,16 @@ fun! s:node_has_child(node, pos)
 endfun
 
 fun! s:init()  
-  let l:i = 0
-  for node in g:vwm#layouts 
-    let g:vwm#layouts[i] = s:normalize_node(node) 
-    let l:i = l:i + 1
-  endfor
+  if exists('g:vwm#layouts')
+    let l:i = 0
+    for node in g:vwm#layouts 
+      let g:vwm#layouts[i] = s:normalize_node(node) 
+      let l:i = l:i + 1
+    endfor
+  else
+    let g:vwm#layouts =[s:def_layt]
+    call s:init()
+  endif
 endfun
 
 call s:init()
