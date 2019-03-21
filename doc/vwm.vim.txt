@@ -16,7 +16,7 @@ COMMANDS                                                    *vwm.vim-commands*
   Closes the layout specified by {name}
 
 :VwmToggle {name}
-  Togglesthe layout specified by {name}
+  Toggles the layout specified by {name}
 
 :VwmRefresh
   Reinitializes the layout definitions defined in |g:vwm#layouts|
@@ -53,7 +53,7 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {unlisted}[default=1]: If true, all buffers derived from this layout will be
   made unlisted.
                                                            *vwm-layouts-child*
-  Each child node consits of itself and 0 more child nodes. A cihld node
+  Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
 
   {'init'}: A list of commands to run on buffer creation.
@@ -70,78 +70,8 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {bot}[opt]: Layout bot relative of this layout.
 
+  {fixed}[default=0]: If true, the buffer's size will be made fixed.
+
 ==============================================================================
-EXAMPLE                                                     *vwm.vim-examples*
-                                                         *vwm-layouts-example*
-  The following example will create 3 layouts, a vimdiff style layout, a
-  frame, and lastly a terminal panel for neovim users. Test the commands with
-  `VwmOpen vimdiff`, `VwmOpen frame`, `VwmOpen test`, making sure to run
-  VwmClose _name_ between each. >
-
-      let s:vimdiff = {
-            \  'name': 'vimdiff',
-            \  'top':
-            \  {
-            \    'init': ['wincmd o', 'normal ibase'],
-            \    'left': 
-            \    {
-            \      'init': ['normal ilocal']
-            \    },
-            \    'right': 
-            \    {
-            \      'init': ['normal iremote']
-            \    }
-            \  },
-            \  'bot': 
-            \  {
-            \    'init': ['normal imerge'],
-            \    'sz': 20
-            \  }
-            \}
-
-      let s:frame = {
-            \  'name': 'frame',
-            \  'top': {
-            \    'sz': 10,
-            \    'left': {
-            \      'init': []
-            \    },
-            \    'right': {
-            \      'init': []
-            \    }
-            \  },
-            \  'bot': {
-            \    'sz': 10,
-            \    'left': {
-            \      'init': []
-            \    },
-            \    'right': {
-            \      'init': []
-            \    }
-            \  },
-            \  'left': {
-            \    'sz': 50
-            \  },
-            \  'right': {
-            \    'sz': 50
-            \  }
-            \}
-
-      let s:test = {
-            \    'name': 'test',
-            \    'bot':
-            \    {
-            \      'init': ['call termopen("zsh", {"detach": 0})'],
-            \      'sz': 12,
-            \      'left': 
-            \      {
-            \        'init': ['call termopen("zsh", {"detach": 0})'],
-            \      },
-            \      'right':
-            \      {
-            \        'init': ['call termopen("zsh", {"detach": 0})'],
-            \      }
-            \    }
-            \  }
-
-      let g:vwm#layouts = [s:vimdiff, s:frame, s:test]
+EXAMPLES                                                    *vwm.vim-examples*
+see https://github.com/paroxayte/vwm.vim#examples
