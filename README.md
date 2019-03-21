@@ -18,8 +18,9 @@ A layout manager for vim and nvim.
 
 ## Usage
 
-* **Layout on:**  `:VwmOpen *layout_name*`
-* **Layout off:** `:VwmClose *layout_name*`
+* **Layout on:**      `:VwmOpen *layout_name*`
+* **Layout off:**     `:VwmClose *layout_name*`
+* **Layout toggle:**  `:VwmToggle *layout_name*` 
 
 ## Example
   
