@@ -1,13 +1,14 @@
-# *V*im *W*indow *M*anager 
+# *V*im *W*indow *M*anager
 
 A layout manager for vim and nvim.
-![](expose.gif)
+![](./.github/default.gif)
 
 ## Features
 
 * Save and manage vim windows via layouts
 * Automatically cache and unlist buffers
 * Automatically reuse buffers
+* Regroup command buffers
 * Highly configurable
 
 ## Installation
@@ -20,33 +21,23 @@ A layout manager for vim and nvim.
 
 * **Layout on:**      `:VwmOpen *layout_name*`
 * **Layout off:**     `:VwmClose *layout_name*`
-* **Layout toggle:**  `:VwmToggle *layout_name*` 
+* **Layout toggle:**  `:VwmToggle *layout_name*`
 
-## Example
-  
+*note:* `default` *is the only default layout. Test it out!*
+
+## Examples
+
 **_note:_** For detailed configuration see `help: vwm.vim`, for more examples see `:help
 vwm.vim-examples`
 
-The following example will create 3 equally sized terminals of height 12 at the bottom of the vim
-  screen on **neovim**.
+### layouts
+**[definitions](./.github/layouts.vim)**
+![](./.github/layouts.gif)
 
-```vim
-let g:vwm#layouts = [
-      \  {
-      \    'name': 'test',
-      \    'bot':
-      \    {
-      \      'init': ['call termopen("zsh", {"detach": 0})'],
-      \      'sz': 12,
-      \      'left': 
-      \      {
-      \        'init': ['call termopen("zsh", {"detach": 0})'],
-      \      },
-      \      'right':
-      \      {
-      \        'init': ['call termopen("zsh", {"detach": 0})'],
-      \      }
-      \    }
-      \  }
-      \]
-```
+### command buffer regrouping
+*vwm can take commands that open a new window, and incorporate that window in to a defined layout*
+
+The following example will make use of the wonderful [NERDTree plugin](https://github.com/scrooloose/nerdtree) and the equally wonderful [Tagbar plugin](https://github.com/majutsushi/tagbar).
+
+**[definitions](./.github/dev_panel.vim)**
+![](./.github/bufsteal.gif)
