@@ -27,9 +27,7 @@ A layout manager for vim and nvim.
 
 ## Examples
 
-**_note:_** For detailed configuration see `help: vwm.vim`, for more examples see `:help
-vwm.vim-examples`
-
+**_note:_** For detailed configuration see `help: vwm.vim`.
 ### layouts
 **[definitions](./.github/layouts.vim)**
 ![](./.github/layouts.gif)

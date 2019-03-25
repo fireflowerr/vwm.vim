@@ -56,9 +56,11 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
 
-  {'init'}: A list of commands to run on buffer creation.
+  {'init'}: A list of commands to run on buffer creation. Accepts Strings and
+  Funcrefs.
 
-  {'restore'}[opt]: A list of commands to run on buffer restoration.
+  {'restore'}[opt]: A list of commands to run on buffer restoration. Accepts Strings and
+  Funcrefs.
 
   {'sz'}[opt]: The size of the window. Default to half of the current window.
 
