@@ -39,15 +39,19 @@ fun! s:close_main(node, cache, unlisted)
 endfun
 
 fun! vwm#open(name)
+  " Check if provided name is a defined layout
   let l:nodeIndex = s:lookup_node(a:name)
   if l:nodeIndex == -1
     return -1
   endif
+
+  " Mark layout as active, save current buf id for returning to.
   let g:vwm#layouts[l:nodeIndex].active = 1
   let l:node = g:vwm#layouts[l:nodeIndex]
   call s:close_main(l:node, l:node.cache, l:node.unlisted)
   let l:bid = bufwinnr('%')
 
+  " Begin recursive layout population
   if s:node_has_child(l:node, 'left')
     let l:mod = l:node.abs ? 'to' : ''
     execute('vert ' . l:mod . ' ' . 'new')
@@ -119,17 +123,17 @@ endfun
 fun! s:place_content(node)
   let l:init_buf = bufnr('%')
   let l:init_wid = bufwinnr(l:init_buf)
+
+  " If buf exists, place it in current window and kill tmp buff
   if s:buf_exists(a:node.bid)
     execute(a:node.bid . 'b')
     execute(l:init_buf . 'bw')
-    for cmd in a:node.restore
-      execute(cmd)
-    endfor
+    execute_cmds(a:node.restore)
     return bufnr('%')
   endif
-  for cmd in a:node.init
-    execute(cmd)
-  endfor
+
+  " Otherwise create the buff and force it to be in the current window
+  call s:execute_cmds(a:node.init)
   let l:final_buf = bufnr('$')
   let l:final_wid = bufwinnr(l:final_buf)
   if l:init_wid != l:final_wid
@@ -140,6 +144,17 @@ fun! s:place_content(node)
     execute(l:init_buf . 'bw')
   endif
   return bufnr('%')
+endfun
+
+" Execute layout defined commands. Accept funcrefs and Strings
+fun! s:execute_cmds(cmds)
+  for Cmd in a:cmds
+    if type(Cmd) == 2
+      call Cmd()
+    else
+      execute(Cmd)
+    endif
+  endfor
 endfun
 
 fun! s:buf_active(bid)
@@ -170,6 +185,7 @@ fun! s:lookup_node(name)
   return -1
 endfun
 
+" Apply layout window formattings based on node and root node configurations
 fun! s:format_winnode(node, unlisted, isVert)
   if a:node.sz
     if a:isVert
