@@ -102,7 +102,7 @@ fun! s:open_main(node, unlisted, isVert)
     let l:node.bot = s:open_main(a:node.bot, a:unlisted, 0)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
-  call s:format_winnode(a:node, a:unlisted, a:isVert) 
+  call s:format_winnode(a:node, a:unlisted, a:isVert)
   return l:node
 endfun
 
@@ -128,7 +128,7 @@ fun! s:place_content(node)
   if s:buf_exists(a:node.bid)
     execute(a:node.bid . 'b')
     execute(l:init_buf . 'bw')
-    execute_cmds(a:node.restore)
+    call s:execute_cmds(a:node.restore)
     return bufnr('%')
   endif
 
@@ -174,7 +174,7 @@ endfun
 
 fun! s:lookup_node(name)
   let l:i = 0
-  for layout_root in g:vwm#layouts 
+  for layout_root in g:vwm#layouts
     let l:layout_name = layout_root.name
     if l:layout_name =~ a:name
       return l:i
