@@ -55,51 +55,57 @@ fun! vwm#open(name)
   if s:node_has_child(l:node, 'left')
     let l:mod = l:node.abs ? 'to' : ''
     execute('vert ' . l:mod . ' ' . 'new')
-    let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left, l:node.unlisted, 1)
+    let g:vwm#layouts[l:nodeIndex].left = s:open_main(l:node.left, l:node.unlisted, 1, 0)
   endif
   execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'right')
     let l:mod = l:node.abs ? 'bo' : 'bel'
     execute('vert ' . l:mod . ' ' . 'new')
-    let g:vwm#layouts[l:nodeIndex].right = s:open_main(l:node.right, l:node.unlisted, 1)
+    let g:vwm#layouts[l:nodeIndex].right = s:open_main(l:node.right, l:node.unlisted, 1, 0)
   endif
   execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'top')
     let l:mod = l:node.abs ? 'to' : ''
     execute(l:mod . ' ' . 'new')
-    let g:vwm#layouts[l:nodeIndex].top = s:open_main(l:node.top, l:node.unlisted, 0)
+    let g:vwm#layouts[l:nodeIndex].top = s:open_main(l:node.top, l:node.unlisted, 0, 0)
   endif
   execute(bufwinnr(l:bid) . 'wincmd w')
   if s:node_has_child(l:node, 'bot')
     let l:mod = l:node.abs ? 'bo' : 'bel'
     execute(l:mod . ' ' . 'new')
-    let g:vwm#layouts[l:nodeIndex].bot = s:open_main(l:node.bot, l:node.unlisted, 0)
+    let g:vwm#layouts[l:nodeIndex].bot = s:open_main(l:node.bot, l:node.unlisted, 0, 0)
   endif
   execute(bufwinnr(l:bid) . 'wincmd w')
+
+  "Focus the specified node, otherwise leave focus at origin
+  if l:node.focus
+    execute(bufwinnr(l:node.focus) . 'wincmd w')
+  endif
 endfun
 
-fun! s:open_main(node, unlisted, isVert)
+fun! s:open_main(node, unlisted, isVert, focus)
   let l:node = a:node
   let l:node.bid = s:place_content(a:node)
+  let l:focus = l:node.focus == 0 ? a:focus : l:node.bid
 
   if s:node_has_child(a:node, 'left')
     vert new
-    let l:node.left = s:open_main(a:node.left, a:unlisted, 1)
+    let l:node.left = s:open_main(a:node.left, a:unlisted, 1, l:focus)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'right')
     vert belowright new
-    let l:node.right = s:open_main(a:node.right, a:unlisted, 1)
+    let l:node.right = s:open_main(a:node.right, a:unlisted, 1, l:focus)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'top')
     new
-    let l:node.top = s:open_main(a:node.top, a:unlisted, 0)
+    let l:node.top = s:open_main(a:node.top, a:unlisted, 0, l:focus)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   if s:node_has_child(a:node, 'bot')
     belowright new
-    let l:node.bot = s:open_main(a:node.bot, a:unlisted, 0)
+    let l:node.bot = s:open_main(a:node.bot, a:unlisted, 0, l:focus)
   endif
   execute(bufwinnr(l:node.bid) . 'wincmd w')
   call s:format_winnode(a:node, a:unlisted, a:isVert)

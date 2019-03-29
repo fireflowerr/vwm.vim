@@ -1,10 +1,10 @@
 let s:def_layt = {
       \  'name': 'default',
-      \  'bot': 
+      \  'bot':
       \  {
       \    'sz': 12,
       \    'init': ['setlocal nonumber', 'term bash'],
-      \    'left': 
+      \    'left':
       \    {
       \      'init': ['setlocal nonumber','term bash']
       \    }
@@ -43,6 +43,9 @@ fun! s:normalize_node(node)
   if !exists('a:node.fixed')
     let l:node['fixed'] = 0
   endif
+  if !exists('a:node.focus')
+    let l:node['focus'] = 0
+  endif
   if s:node_has_child(a:node, 'left')
     call s:normalize_node(a:node.left)
   else
@@ -78,11 +81,11 @@ fun! s:node_has_child(node, pos)
   return 0
 endfun
 
-fun! s:init()  
+fun! s:init()
   if exists('g:vwm#layouts')
     let l:i = 0
-    for node in g:vwm#layouts 
-      let g:vwm#layouts[i] = s:normalize_node(node) 
+    for node in g:vwm#layouts
+      let g:vwm#layouts[i] = s:normalize_node(node)
       let l:i = l:i + 1
     endfor
   else

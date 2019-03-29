@@ -9,10 +9,10 @@ CONTENTS                                                    *vwm.vim-contents*
 ==============================================================================
 COMMANDS                                                    *vwm.vim-commands*
 
-:VwmOpen {name}                                                     
+:VwmOpen {name}
   Opens the layout specified by {name}
 
-:VwmClose {name}                                                   
+:VwmClose {name}
   Closes the layout specified by {name}
 
 :VwmToggle {name}
@@ -73,6 +73,9 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {bot}[opt]: Layout bot relative of this layout.
 
   {fixed}[default=0]: If true, the buffer's size will be made fixed.
+
+  {focus}[default=0]: If true, this node's window will be focused at the end
+  of layout realization.
 
 ==============================================================================
 EXAMPLES                                                    *vwm.vim-examples*
