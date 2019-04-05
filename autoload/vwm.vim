@@ -93,40 +93,43 @@ fun! vwm#open(name)
 endfun
 
 fun! s:open_main(node, unlisted, isVert, focus)
-  let l:node = a:node
-  let l:node.bid = s:place_content(a:node)
-  let l:focus = l:node.focus == 0 ? a:focus : l:node.bid
+  let a:node.bid = s:place_content(a:node)
+  let l:focus = a:node.focus == 0 ? a:focus : a:node.bid
 
   if s:node_has_child(a:node, 'left')
     vert new
     let l:res = s:open_main(a:node.left, a:unlisted, 1, l:focus)
-    let l:node.left = l:res[0]
+    let a:node.left = l:res[0]
     let l:focus = l:res[1]
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
   endif
-  execute(bufwinnr(l:node.bid) . 'wincmd w')
+
   if s:node_has_child(a:node, 'right')
     vert belowright new
     let l:res = s:open_main(a:node.right, a:unlisted, 1, l:focus)
-    let l:node.right = l:res[0]
+    let a:node.right = l:res[0]
     let l:focus = l:res[1]
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
   endif
-  execute(bufwinnr(l:node.bid) . 'wincmd w')
+
   if s:node_has_child(a:node, 'top')
     new
     let l:res = s:open_main(a:node.top, a:unlisted, 0, l:focus)
-    let l:node.top = l:res[0]
-    let l:node.focus = l:res[1]
+    let a:node.top = l:res[0]
+    let l:focus = l:res[1]
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
   endif
-  execute(bufwinnr(l:node.bid) . 'wincmd w')
+
   if s:node_has_child(a:node, 'bot')
     belowright new
     let l:res = s:open_main(a:node.bot, a:unlisted, 0, l:focus)
-    let l:node.bot = l:res[0]
+    let a:node.bot = l:res[0]
     let l:focus = l:res[1]
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
   endif
-  execute(bufwinnr(l:node.bid) . 'wincmd w')
+
   call s:format_winnode(a:node, a:unlisted, a:isVert)
-  return [l:node, l:focus]
+  return [a:node, l:focus]
 endfun
 
 fun! vwm#toggle(name)
