@@ -17,7 +17,7 @@ fun! s:close_main(node, cache, unlisted)
       if a:unlisted
         execute('setlocal nobuflisted')
       endif
-      execute('wincmd c')
+      execute('close')
     else
       execute(a:node.bid . 'bd')
     endif
@@ -93,43 +93,46 @@ fun! vwm#open(name)
 endfun
 
 fun! s:open_main(node, unlisted, isVert, focus)
-  let a:node.bid = s:place_content(a:node)
-  let l:focus = a:node.focus == 0 ? a:focus : a:node.bid
+  let l:tmp_bid = bufnr('%')
 
   if s:node_has_child(a:node, 'left')
     vert new
-    let l:res = s:open_main(a:node.left, a:unlisted, 1, l:focus)
+    let l:res = s:open_main(a:node.left, a:unlisted, 1, a:node.focus)
     let a:node.left = l:res[0]
-    let l:focus = l:res[1]
-    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    let a:node.focus = l:res[1]
+    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
   endif
 
   if s:node_has_child(a:node, 'right')
     vert belowright new
-    let l:res = s:open_main(a:node.right, a:unlisted, 1, l:focus)
+    let l:res = s:open_main(a:node.right, a:unlisted, 1, a:node.focus)
     let a:node.right = l:res[0]
-    let l:focus = l:res[1]
-    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    let a:node.focus = l:res[1]
+    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
   endif
 
   if s:node_has_child(a:node, 'top')
     new
-    let l:res = s:open_main(a:node.top, a:unlisted, 0, l:focus)
+    let l:res = s:open_main(a:node.top, a:unlisted, 0, a:node.focus)
     let a:node.top = l:res[0]
-    let l:focus = l:res[1]
-    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    let a:node.focus = l:res[1]
+    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
   endif
 
   if s:node_has_child(a:node, 'bot')
     belowright new
-    let l:res = s:open_main(a:node.bot, a:unlisted, 0, l:focus)
+    let l:res = s:open_main(a:node.bot, a:unlisted, 0, a:node.focus)
     let a:node.bot = l:res[0]
-    let l:focus = l:res[1]
-    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    let a:node.focus = l:res[1]
+    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
   endif
 
+  call s:resz_winnode(a:node, a:isVert)
+  let a:node.bid = s:place_content(a:node)
+  call s:resz_winnode(a:node, a:isVert)
   call s:format_winnode(a:node, a:unlisted, a:isVert)
-  return [a:node, l:focus]
+  let a:node.focus = a:node.focus == 0 ? a:focus : a:node.bid
+  return [a:node, a:node.focus]
 endfun
 
 fun! vwm#toggle(name)
@@ -150,6 +153,8 @@ fun! s:place_content(node)
   let l:init_buf = bufnr('%')
   let l:init_wid = bufwinnr(l:init_buf)
 
+  let l:init_last = bufwinnr('$')
+
   " If buf exists, place it in current window and kill tmp buff
   if s:buf_exists(a:node.bid)
     execute(a:node.bid . 'b')
@@ -160,14 +165,14 @@ fun! s:place_content(node)
 
   " Otherwise create the buff and force it to be in the current window
   call s:execute_cmds(a:node.init)
-  let l:final_buf = bufnr('$')
-  let l:final_wid = bufwinnr(l:final_buf)
-  if l:init_wid != l:final_wid
-    execute(l:final_wid . 'wincmd w')
-    wincmd c
+  let l:final_last = bufwinnr('$')
+  if l:init_last != l:final_last
+
+    let l:final_buf = winbufnr(l:final_last)
+    execute(l:final_last . 'wincmd w')
+    close
     execute(l:init_wid . 'wincmd w')
     execute(l:final_buf . 'b')
-    execute(l:init_buf . 'bw')
   endif
   return bufnr('%')
 endfun
@@ -213,13 +218,6 @@ endfun
 
 " Apply layout window formattings based on node and root node configurations
 fun! s:format_winnode(node, unlisted, isVert)
-  if a:node.sz
-    if a:isVert
-      execute('vert resize ' . a:node.sz)
-    else
-      execute('resize ' . a:node.sz)
-    endif
-  endif
   if a:unlisted
     setlocal nobuflisted
   endif
@@ -228,6 +226,16 @@ fun! s:format_winnode(node, unlisted, isVert)
       setlocal winfixwidth
     else
       setlocal winfixheight
+    endif
+  endif
+endfun
+
+fun! s:resz_winnode(node, isVert)
+  if a:node.sz
+    if a:isVert
+      execute('vert resize ' . a:node.sz)
+    else
+      execute('resize ' . a:node.sz)
     endif
   endif
 endfun
