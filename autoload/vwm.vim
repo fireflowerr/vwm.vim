@@ -7,32 +7,20 @@ fun! vwm#close(name)
   endif
   let g:vwm#layouts[l:node_index].active = 0
   let l:node = g:vwm#layouts[l:node_index]
-  call s:close_main(l:node, l:node.cache)
+
+  let l:Funcr = function('s:close_helper', [l:node.cache])
+  call util#traverse(l:node, v:null, v:null, l:Funcr, v:null)
 endfun
 
-fun! s:close_main(node, cache)
+fun! s:close_helper(cache, node, ori)
   if util#buf_active(a:node["bid"])
     if a:cache
       execute(bufwinnr(a:node.bid) . 'wincmd w')
       close
     else
-      execute(a:node.bid . 'bd')
+      execute(a:node.bid . 'bw')
     endif
   endif
-
-  if util#node_has_child(a:node, 'left')
-    call s:close_main(a:node.left, a:cache)
-  endif
-  if util#node_has_child(a:node, 'right')
-    call s:close_main(a:node.right, a:cache)
-  endif
-  if util#node_has_child(a:node, 'top')
-    call s:close_main(a:node.top, a:cache)
-  endif
-  if util#node_has_child(a:node, 'bot')
-    call s:close_main(a:node.bot, a:cache)
-  endif
-
 endfun
 
 fun! vwm#open(name)
@@ -45,7 +33,10 @@ fun! vwm#open(name)
   " Mark layout as active, save current buf id for returning to.
   let g:vwm#layouts[l:nodeIndex].active = 1
   let l:node = g:vwm#layouts[l:nodeIndex]
-  call s:close_main(l:node, l:node.cache)
+
+  let l:Funcr = function('s:close_helper', [l:node.cache])
+  call util#traverse(l:node, v:null, v:null, l:Funcr, v:null)
+
   let l:bid = bufwinnr('%')
   let l:focus = 0
 
@@ -86,6 +77,54 @@ fun! vwm#open(name)
   "Focus the specified node, otherwise leave focus at origin
   if l:focus
     execute(bufwinnr(l:focus) . 'wincmd w')
+  endif
+endfun
+
+fun! s:update_node(node, ori, val)
+  if a:ori == 1
+    let a:node.left = a:val
+  elseif a:ori == 2
+    let a:node.right = a:val
+  elseif a:ori == 3
+    let a:node.top = a:val
+  elseif a:ori == 4
+    let a:node.bot = a:val
+  else
+    echoerr "unexpected val passed to s:update_node(...)"
+  endif
+endfun
+
+fun! s:populate_root(node, ori)
+  if l:node.abs
+
+    if a:ori == 1
+      vert to new
+    elseif a:ori == 2
+      vert bo new
+    elseif a:ori == 3
+      to new
+    elseif a:ori == 4
+      bo new
+    else
+      echoerr "unexpected val passed to s:populate_root(...)"
+    endif
+
+  else
+    call s:populate_child(a:node, a:ori)
+  endif
+endfun
+
+fun! s:populate_child(node, ori)
+  if a:ori == 1
+    vert abo new
+  elseif a:ori == 2
+    vert bel new
+  elseif a:ori == 3
+    abo new
+  elseif a:ori == 4
+    bel new
+  else
+    echoerr "unexpected val passed to s:populate_root(...)"
   endif
 endfun
 
@@ -170,11 +209,14 @@ fun! s:place_content(node)
   let l:final_last = bufwinnr('$')
   if l:init_last != l:final_last
 
-    let l:final_buf = winbufnr(l:final_last)
-    execute(l:final_last . 'wincmd w')
-    close
-    execute(l:init_wid . 'wincmd w')
-    execute(l:final_buf . 'b')
+    echoerr l:init_last
+    echoerr l:final_last
+
+    " let l:final_buf = winbufnr(l:final_last)
+    " execute(l:final_last . 'wincmd w')
+    " close
+    " execute(l:init_wid . 'wincmd w')
+    " execute(l:final_buf . 'b')
   endif
   return bufnr('%')
 endfun

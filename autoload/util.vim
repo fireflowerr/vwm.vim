@@ -67,3 +67,58 @@ endfun
 fun! util#tmp_setlocal()
   setlocal bt=nofile bh=wipe noswapfile
 endfun
+
+" Right recursive traverse and do
+" orientation is optional 1:left, 2:right, 3:top, 4:bot
+fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr)
+
+  let l:v = {}
+
+  if util#node_has_child(a:node, 'left')
+    call a:fRprime(node, 1)
+    let l:v[1] = s:traverse_main(a:node.left, a:fBfr, a:fAftr, 1)
+  endif
+  if util#node_has_child(a:node, 'right')
+    call a:fRprime(node, 2)
+    let l:v[2] = s:traverse_main(a:node.right, a:fBfr, a:fAftr, 2)
+  endif
+  if util#node_has_child(a:node, 'top')
+    call a:fRprime(node, 3)
+    let l:v[3] = s:traverse_main(a:node.top, a:fBfr, a:fAftr, 3)
+  endif
+  if util#node_has_child(a:node, 'bot')
+    call a:fRprime(node, 4)
+    let l:v[4] = s:traverse_main(a:node.bot, a:fBfr, a:fAftr, 4)
+  endif
+
+  if !(a:fRAftr is v:null)
+    call a:fRAftr(a:node, l:v)
+  endif
+
+endfun
+
+fun! s:traverse_main(node, fBfr, fAftr, ori)
+  if !(a:fBfr is v:null)
+    call a:fBfr(a:node, a:ori)
+  endif
+
+  let l:v = {}
+
+  if util#node_has_child(a:node, 'left')
+    let l:v[1] = s:traverse_main(a:node.left, a:fBfr, a:fAftr, 1)
+  endif
+  if util#node_has_child(a:node, 'right')
+    let l:v[2] = s:traverse_main(a:node.right, a:fBfr, a:fAftr, 2)
+  endif
+  if util#node_has_child(a:node, 'top')
+    let l:v[3] = s:traverse_main(a:node.top, a:fBfr, a:fAftr, 3)
+  endif
+  if util#node_has_child(a:node, 'bot')
+    let l:v[4] = s:traverse_main(a:node.bot, a:fBfr, a:fAftr, 4)
+  endif
+
+  if !(a:fAftr is v:null)
+    call a:fAftr(a:node, l:v, a:ori)
+  endif
+
+endfun
