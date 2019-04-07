@@ -5,14 +5,14 @@ fun! vwm#close(name)
   if l:node_index == -1
     return -1
   endif
-  let g:vwm#layouts[l:node_index].active = 0
   let l:node = g:vwm#layouts[l:node_index]
 
   let l:Funcr = function('s:close_helper', [l:node.cache])
-  call util#traverse(l:node, v:null, v:null, l:Funcr, v:null)
+  let l:FRaftr = function('s:deactivate')
+  call util#traverse(l:node, v:null, l:FRaftr, v:null, l:Funcr)
 endfun
 
-fun! s:close_helper(cache, node, ori)
+fun! s:close_helper(cache, node, trash, ori)
   if util#buf_active(a:node["bid"])
     if a:cache
       execute(bufwinnr(a:node.bid) . 'wincmd w')
@@ -21,6 +21,10 @@ fun! s:close_helper(cache, node, ori)
       execute(a:node.bid . 'bw')
     endif
   endif
+endfun
+
+fun! s:deactivate(node, trash)
+  let a:node['active'] = 0
 endfun
 
 fun! vwm#open(name)
@@ -37,7 +41,7 @@ fun! vwm#open(name)
   let l:FAftr = function('s:fill_winnode')
 
   " Begin winnode population
-  call util#traverse(a:node, l:Primer, l:RAftr, l:FBfr, l:FAftr)
+  call util#traverse(l:node, l:Primer, l:RAftr, l:FBfr, l:FAftr)
 endfun
 
 fun! s:update_node(node, def)
@@ -47,7 +51,7 @@ fun! s:update_node(node, def)
 endfun
 
 fun! s:populate_root(node, ori)
-  if l:node.abs
+  if a:node.abs
 
     if a:ori == 1
       vert to new
@@ -59,11 +63,15 @@ fun! s:populate_root(node, ori)
       bo new
     else
       echoerr "unexpected val passed to s:populate_root(...)"
+      return -1
     endif
 
+    call s:buf_mktmp()
   else
     call s:populate_child(a:node, a:ori)
   endif
+
+  let a:node['active'] = 1
 endfun
 
 fun! s:populate_child(node, ori)
@@ -77,10 +85,17 @@ fun! s:populate_child(node, ori)
     bel new
   else
     echoerr "unexpected val passed to s:populate_root(...)"
+    return -1
   endif
+
+  call s:buf_mktmp()
 endfun
 
-fun! s:fill_winnode(node, ori)
+fun! s:buf_mktmp()
+  setlocal nobl bh=wipe bt=nofile noswapfile
+endfun
+
+fun! s:fill_winnode(node, trash, ori)
   call util#resz_winnode(a:node, a:ori)
   let a:node.bid = s:place_content(a:node)
   call util#resz_winnode(a:node, a:ori)
@@ -123,17 +138,15 @@ fun! s:place_content(node)
   " Otherwise create the buff and force it to be in the current window
   call s:execute_cmds(a:node.init)
   let l:final_last = bufwinnr('$')
+
   if l:init_last != l:final_last
-
-    echoerr l:init_last
-    echoerr l:final_last
-
-    " let l:final_buf = winbufnr(l:final_last)
-    " execute(l:final_last . 'wincmd w')
-    " close
-    " execute(l:init_wid . 'wincmd w')
-    " execute(l:final_buf . 'b')
+    let l:final_buf = winbufnr(l:final_last)
+    execute(l:final_last . 'wincmd w')
+    close
+    execute(l:init_wid . 'wincmd w')
+    execute(l:final_buf . 'b')
   endif
+
   return bufnr('%')
 endfun
 
@@ -147,4 +160,3 @@ fun! s:execute_cmds(cmds)
     endif
   endfor
 endfun
-
