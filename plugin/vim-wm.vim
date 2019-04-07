@@ -11,63 +11,70 @@ let s:def_layt = {
       \  }
       \}
 
+fun! s:normalize_root(node)
+  let a:node['root'] = 1
+endfun
+
 fun! s:normalize_node(node)
-  let l:node = a:node
   if !exists('a:node.sz')
-    let l:node['sz'] = 0
+    let a:node['sz'] = 0
   endif
   if !exists('a:node.bid')
-    let l:node['bid'] = -1
+    let a:node['bid'] = -1
   endif
   if !exists('a:node.name')
-    let l:node['name'] = ''
+    let a:node['name'] = ''
   endif
   if !exists('a:node.cache')
-    let l:node['cache'] = 1
-  endif
-  if !exists('a:node.unlisted')
-    let l:node['unlisted'] = 1
+    let a:node['cache'] = 1
   endif
   if !exists('a:node.init')
-    let l:node['init'] = []
+    let a:node['init'] = []
   endif
   if !exists('a:node.restore')
-    let l:node['restore'] = []
+    let a:node['restore'] = []
   endif
   if !exists('a:node.abs')
-    let l:node['abs'] = 1
+    let a:node['abs'] = 1
   endif
   if !exists('a:node.active')
-    let l:node['active'] = 0
+    let a:node['active'] = 0
   endif
   if !exists('a:node.fixed')
-    let l:node['fixed'] = 0
+    let a:node['fixed'] = 0
   endif
   if !exists('a:node.focus')
-    let l:node['focus'] = 0
+    let a:node['focus'] = 0
   endif
+
+  " set is just a convience wrapper for setlocal cmd
+  if !exists('a:node.set')
+    let a:node['set'] = ['setlocal bh=hide nobl']
+  endif
+  let a:node['init'] += a:node['set']
+
   if s:node_has_child(a:node, 'left')
     call s:normalize_node(a:node.left)
   else
-    let l:node['left'] = {}
+    let a:node['left'] = {}
   endif
   if s:node_has_child(a:node, 'right')
     call s:normalize_node(a:node.right)
   else
-    let l:node['right'] = {}
+    let a:node['right'] = {}
   endif
   if s:node_has_child(a:node, 'top')
     call s:normalize_node(a:node.top)
   else
-    let l:node['top'] = {}
+    let a:node['top'] = {}
   endif
   if s:node_has_child(a:node, 'bot')
     call s:normalize_node(a:node.bot)
   else
-    let l:node['bot'] = {}
+    let a:node['bot'] = {}
   endif
 
-  return l:node
+  return a:node
 endfun
 
 fun! s:is_empty(clct)
@@ -85,7 +92,8 @@ fun! s:init()
   if exists('g:vwm#layouts')
     let l:i = 0
     for node in g:vwm#layouts
-      let g:vwm#layouts[i] = s:normalize_node(node)
+      call s:normalize_root(node)
+      call s:normalize_node(node)
       let l:i = l:i + 1
     endfor
   else

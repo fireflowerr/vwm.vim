@@ -24,74 +24,26 @@ fun! s:close_helper(cache, node, ori)
 endfun
 
 fun! vwm#open(name)
-  " Check if provided name is a defined layout
   let l:nodeIndex = util#lookup_node(a:name)
   if l:nodeIndex == -1
     return -1
   endif
 
-  " Mark layout as active, save current buf id for returning to.
-  let g:vwm#layouts[l:nodeIndex].active = 1
   let l:node = g:vwm#layouts[l:nodeIndex]
+  let l:node.bid = bufnr('%')
+  let l:Primer = function('s:populate_root')
+  let l:RAftr = function('s:update_node')
+  let l:FBfr = function('s:populate_child')
+  let l:FAftr = function('s:fill_winnode')
 
-  let l:Funcr = function('s:close_helper', [l:node.cache])
-  call util#traverse(l:node, v:null, v:null, l:Funcr, v:null)
-
-  let l:bid = bufwinnr('%')
-  let l:focus = 0
-
-  " Begin recursive layout population
-  if util#node_has_child(l:node, 'left')
-    let l:mod = l:node.abs ? 'to' : ''
-    execute('vert ' . l:mod . ' ' . 'new')
-    let l:res = s:open_main(l:node.left, l:node.unlisted, 1, 0)
-    let g:vwm#layouts[l:nodeIndex].left = l:res[0]
-    let l:focus = l:res[1]
-  endif
-  execute(bufwinnr(l:bid) . 'wincmd w')
-  if util#node_has_child(l:node, 'right')
-    let l:mod = l:node.abs ? 'bo' : 'bel'
-    execute('vert ' . l:mod . ' ' . 'new')
-    let l:res = s:open_main(l:node.right, l:node.unlisted, 1, 0)
-    let g:vwm#layouts[l:nodeIndex].right = l:res[0]
-    let l:focus = l:res[1]
-  endif
-  execute(bufwinnr(l:bid) . 'wincmd w')
-  if util#node_has_child(l:node, 'top')
-    let l:mod = l:node.abs ? 'to' : ''
-    execute(l:mod . ' ' . 'new')
-    let l:res = s:open_main(l:node.top, l:node.unlisted, 0, 0)
-    let g:vwm#layouts[l:nodeIndex].top = l:res[0]
-    let l:focus = l:res[1]
-  endif
-  execute(bufwinnr(l:bid) . 'wincmd w')
-  if util#node_has_child(l:node, 'bot')
-    let l:mod = l:node.abs ? 'bo' : 'bel'
-    execute(l:mod . ' ' . 'new')
-    let l:res = s:open_main(l:node.bot, l:node.unlisted, 0, 0)
-    let g:vwm#layouts[l:nodeIndex].bot = l:res[0]
-    let l:focus = l:res[1]
-  endif
-  execute(bufwinnr(l:bid) . 'wincmd w')
-
-  "Focus the specified node, otherwise leave focus at origin
-  if l:focus
-    execute(bufwinnr(l:focus) . 'wincmd w')
-  endif
+  " Begin winnode population
+  call util#traverse(a:node, l:Primer, l:RAftr, l:FBfr, l:FAftr)
 endfun
 
-fun! s:update_node(node, ori, val)
-  if a:ori == 1
-    let a:node.left = a:val
-  elseif a:ori == 2
-    let a:node.right = a:val
-  elseif a:ori == 3
-    let a:node.top = a:val
-  elseif a:ori == 4
-    let a:node.bot = a:val
-  else
-    echoerr "unexpected val passed to s:update_node(...)"
-  endif
+fun! s:update_node(node, def)
+  for ori in keys(a:def)
+    let a:node[ori] = a:def[ori]
+  endfor
 endfun
 
 fun! s:populate_root(node, ori)
@@ -128,47 +80,11 @@ fun! s:populate_child(node, ori)
   endif
 endfun
 
-fun! s:open_main(node, unlisted, isVert, focus)
-  call util#tmp_setlocal()
-  let l:tmp_bid = bufnr('%')
-
-  if util#node_has_child(a:node, 'left')
-    vert new
-    let l:res = s:open_main(a:node.left, a:unlisted, 1, a:node.focus)
-    let a:node.left = l:res[0]
-    let a:node.focus = l:res[1]
-    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
-  endif
-
-  if util#node_has_child(a:node, 'right')
-    vert belowright new
-    let l:res = s:open_main(a:node.right, a:unlisted, 1, a:node.focus)
-    let a:node.right = l:res[0]
-    let a:node.focus = l:res[1]
-    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
-  endif
-  if util#node_has_child(a:node, 'top')
-    new
-    let l:res = s:open_main(a:node.top, a:unlisted, 0, a:node.focus)
-    let a:node.top = l:res[0]
-    let a:node.focus = l:res[1]
-    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
-  endif
-
-  if util#node_has_child(a:node, 'bot')
-    belowright new
-    let l:res = s:open_main(a:node.bot, a:unlisted, 0, a:node.focus)
-    let a:node.bot = l:res[0]
-    let a:node.focus = l:res[1]
-    execute(bufwinnr(l:tmp_bid) . 'wincmd w')
-  endif
-
-  call util#resz_winnode(a:node, a:isVert)
+fun! s:fill_winnode(node, ori)
+  call util#resz_winnode(a:node, a:ori)
   let a:node.bid = s:place_content(a:node)
-  call util#resz_winnode(a:node, a:isVert)
-  call util#format_winnode(a:node, a:unlisted, a:isVert)
-  let a:node.focus = a:node.focus == 0 ? a:focus : a:node.bid
-  return [a:node, a:node.focus]
+  call util#resz_winnode(a:node, a:ori)
+  execute(bufwinnr(a:node.bid) . 'wincmd w')
 endfun
 
 fun! vwm#toggle(name)
