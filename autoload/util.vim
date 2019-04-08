@@ -57,7 +57,7 @@ fun! util#active_nodes()
   for node in g:vwm#layouts
 
     if node.active
-      l:active += [node]
+      let l:active += [node]
     endif
 
   endfor
@@ -68,40 +68,67 @@ fun! util#tmp_setlocal()
   setlocal bt=nofile bh=wipe noswapfile
 endfun
 
+fun! util#filter_hnodes(nodes)
+
+  let l:list = []
+  for node in a:nodes
+
+    if util#node_has_child(node, 'top') || util#node_has_child(node, 'bot')
+      let l:list += [node]
+    endif
+
+  endfor
+
+  return l:list
+endfun
+
+fun! util#node_has_vert(node)
+  return util#node_has_child(a:node, 'left') || util#node_has_child(a:node, 'right')
+endfun
+
 " Right recursive traverse and do
 " orientation is optional 1:left, 2:right, 3:top, 4:bot
-fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr)
+fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr, h, v)
 
   let l:v = {}
   let l:bid = bufnr('%')
 
-  if util#node_has_child(a:node, 'left')
-    if !(a:fRprime is v:null)
-      call a:fRprime(a:node, 1)
+  if a:h
+
+    if util#node_has_child(a:node, 'left')
+      if !(a:fRprime is v:null)
+        call a:fRprime(a:node, 1)
+      endif
+      let l:v[1] = s:traverse_main(a:node.left, a:fBfr, a:fAftr, 1, 1)
+      execute(bufwinnr(l:bid) . 'wincmd w')
     endif
-    let l:v[1] = s:traverse_main(a:node.left, a:fBfr, a:fAftr, 1, 1)
-    execute(bufwinnr(l:bid) . 'wincmd w')
+    if util#node_has_child(a:node, 'right')
+      if !(a:fRprime is v:null)
+        call a:fRprime(a:node, 2)
+      endif
+      let l:v[2] = s:traverse_main(a:node.right, a:fBfr, a:fAftr, 2, 1)
+      execute(bufwinnr(l:bid) . 'wincmd w')
+    endif
+
   endif
-  if util#node_has_child(a:node, 'right')
-    if !(a:fRprime is v:null)
-      call a:fRprime(a:node, 2)
+
+  if a:v
+
+    if util#node_has_child(a:node, 'top')
+      if !(a:fRprime is v:null)
+        call a:fRprime(a:node, 3)
+      endif
+      let l:v[3] = s:traverse_main(a:node.top, a:fBfr, a:fAftr, 3, 1)
+      execute(bufwinnr(l:bid) . 'wincmd w')
     endif
-    let l:v[2] = s:traverse_main(a:node.right, a:fBfr, a:fAftr, 2, 1)
-    execute(bufwinnr(l:bid) . 'wincmd w')
-  endif
-  if util#node_has_child(a:node, 'top')
-    if !(a:fRprime is v:null)
-      call a:fRprime(a:node, 3)
+    if util#node_has_child(a:node, 'bot')
+      if !(a:fRprime is v:null)
+        call a:fRprime(a:node, 4)
+      endif
+      let l:v[4] = s:traverse_main(a:node.bot, a:fBfr, a:fAftr, 4, 1)
+      execute(bufwinnr(l:bid) . 'wincmd w')
     endif
-    let l:v[3] = s:traverse_main(a:node.top, a:fBfr, a:fAftr, 3, 1)
-    execute(bufwinnr(l:bid) . 'wincmd w')
-  endif
-  if util#node_has_child(a:node, 'bot')
-    if !(a:fRprime is v:null)
-      call a:fRprime(a:node, 4)
-    endif
-    let l:v[4] = s:traverse_main(a:node.bot, a:fBfr, a:fAftr, 4, 1)
-    execute(bufwinnr(l:bid) . 'wincmd w')
+
   endif
 
   if !(a:fRAftr is v:null)

@@ -49,9 +49,14 @@ fun! s:normalize_node(node)
 
   " set is just a convience wrapper for setlocal cmd
   if !exists('a:node.set')
-    let a:node['set'] = ['setlocal bh=hide nobl']
+    let a:node['set'] = ['bh=hide', 'nobl']
   endif
-  let a:node['init'] += a:node['set']
+
+  let l:set_cmd = 'setlocal'
+  for val in a:node['set']
+    let l:set_cmd += ' ' . val
+  endfor
+  let a:node['init'] += [l:set_cmd]
 
   if s:node_has_child(a:node, 'left')
     call s:normalize_node(a:node.left)

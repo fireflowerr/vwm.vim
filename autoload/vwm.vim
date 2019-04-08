@@ -9,10 +9,10 @@ fun! vwm#close(name)
 
   let l:Funcr = function('s:close_helper', [l:node.cache])
   let l:FRaftr = function('s:deactivate')
-  call util#traverse(l:node, v:null, l:FRaftr, v:null, l:Funcr)
+  call util#traverse(l:node, v:null, l:FRaftr, v:null, l:Funcr, 1, 1)
 endfun
 
-fun! s:close_helper(cache, node, trash, ori)
+fun! s:close_helper(cache, node, t1, t2)
   if util#buf_active(a:node["bid"])
     if a:cache
       execute(bufwinnr(a:node.bid) . 'wincmd w')
@@ -35,13 +35,38 @@ fun! vwm#open(name)
 
   let l:node = g:vwm#layouts[l:nodeIndex]
   let l:node.bid = bufnr('%')
+  let l:hv = 0
+
+  if util#node_has_vert(l:node)
+    let l:hv = 1
+    let l:FClose = function('s:close_helper', [1])
+    let l:FDct = function('s:deactivate')
+    let l:hnodes = util#filter_hnodes(util#active_nodes())
+
+  "If this root node contains a vertical split, first save then close all active horizantal splits
+    for hnode in l:hnodes
+      call util#traverse(hnode, v:null, l:FDct, v:null, l:FClose, 1, 1)
+    endfor
+
+  endif
+
+
   let l:Primer = function('s:populate_root')
   let l:RAftr = function('s:update_node')
   let l:FBfr = function('s:populate_child')
   let l:FAftr = function('s:fill_winnode')
 
   " Begin winnode population
-  call util#traverse(l:node, l:Primer, l:RAftr, l:FBfr, l:FAftr)
+  call util#traverse(l:node, l:Primer, l:RAftr, l:FBfr, l:FAftr, 1, 1)
+
+  " Restore hsplits
+  if l:hv
+
+    for hnode in l:hnodes
+      call util#traverse(hnode, l:Primer, l:RAftr, l:FBfr, l:FAftr, 0, 1)
+    endfor
+
+  endif
 endfun
 
 fun! s:update_node(node, def)
