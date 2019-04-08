@@ -1,6 +1,23 @@
 " Main plugin logic
+fun! vwm#close(...)
+  for name in a:000
+    call s:close(name)
+  endfor
+endfun
 
-fun! vwm#close(name)
+fun! vwm#open(...)
+  for name in a:000
+    call s:open(name)
+  endfor
+endfun
+
+fun! vwm#toggle(...)
+  for name in a:000
+    call s:toggle(name)
+  endfor
+endfun
+
+fun! s:close(name)
   let l:node_index = util#lookup_node(a:name)
   if l:node_index == -1
     return -1
@@ -31,7 +48,7 @@ fun! s:deactivate(node)
   let a:node['active'] = 0
 endfun
 
-fun! vwm#open(name)
+fun! s:open(name)
   let l:nodeIndex = util#lookup_node(a:name)
   if l:nodeIndex == -1
     return -1
@@ -167,7 +184,7 @@ fun! s:fill_winnode(node, def, ori)
   call s:update_node(a:node, a:def)
 endfun
 
-fun! vwm#toggle(name)
+fun! s:toggle(name)
   let l:nodeIndex = util#lookup_node(a:name)
   if l:nodeIndex == -1
     return -1
@@ -175,13 +192,13 @@ fun! vwm#toggle(name)
   let l:node = g:vwm#layouts[l:nodeIndex]
 
   if l:node.active
-    call vwm#close(a:name)
+    call s:close(a:name)
   else
-    call vwm#open(a:name)
+    call s:open(a:name)
   endif
 endfun
 
-fun! vwm#close_all()
+fun! s:close_all()
   for node in util#active_nodes()
     call s:close_main(node, node.cache)
   endfor
