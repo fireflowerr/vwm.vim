@@ -19,11 +19,20 @@ fun! s:normalize_root(node)
   if !exists('a:node.abs')
     let a:node['abs'] = 1
   endif
-  if !exists('a:node.bfr')
-    let a:node['bfr'] = []
+  if !exists('a:node.opnBfr')
+    let a:node['opnBfr'] = []
   endif
-  if !exists('a:node.aftr')
-    let a:node['aftr'] = []
+  if !exists('a:node.opnAftr')
+    let a:node['opnAftr'] = []
+  endif
+  if !exists('a:node.clsBfr')
+    let a:node['clsBfr'] = []
+  endif
+  if !exists('a:node.clsAftr')
+    let a:node['clsAftr'] = []
+  endif
+  if !exists('a:node.active')
+    let a:node['active'] = 0
   endif
 endfun
 
@@ -43,9 +52,6 @@ fun! s:normalize_node(node)
   if !exists('a:node.restore')
     let a:node['restore'] = []
   endif
-  if !exists('a:node.active')
-    let a:node['active'] = 0
-  endif
   if !exists('a:node.focus')
     let a:node['focus'] = 0
   endif
@@ -54,12 +60,6 @@ fun! s:normalize_node(node)
   if !exists('a:node.set')
     let a:node['set'] = ['bh=hide', 'nobl']
   endif
-
-  let l:set_cmd = 'setlocal'
-  for val in a:node['set']
-    let l:set_cmd += ' ' . val
-  endfor
-  let a:node['init'] += [l:set_cmd]
 
   if s:node_has_child(a:node, 'left')
     call s:normalize_node(a:node.left)
@@ -107,6 +107,10 @@ fun! s:init()
   else
     let g:vwm#layouts =[s:def_layt]
     call s:init()
+  endif
+
+  if !exists('g:vwm#force_vert_first')
+    let g:vwm#force_vert_first = 0
   endif
 endfun
 

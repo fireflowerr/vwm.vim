@@ -68,31 +68,13 @@ fun! util#tmp_setlocal()
   setlocal bt=nofile bh=wipe noswapfile
 endfun
 
-fun! util#filter_hnodes(nodes)
-
-  let l:list = []
-  for node in a:nodes
-
-    if util#node_has_child(node, 'top') || util#node_has_child(node, 'bot')
-      let l:list += [node]
-    endif
-
-  endfor
-
-  return l:list
-endfun
-
 fun! util#node_has_vert(node)
   return util#node_has_child(a:node, 'left') || util#node_has_child(a:node, 'right')
 endfun
 
 " Right recursive traverse and do
 " orientation is optional 1:left, 2:right, 3:top, 4:bot
-fun! util#traverse(node, fRprime, fRBfr, fRAftr, fBfr, fAftr, h, v)
-
-  if !(a:fRBfr is v:null)
-    call a:fRBfr(a:node)
-  endif
+fun! util#traverse(node, fRprime, fBfr, fAftr, h, v)
 
   let l:v = {}
   let l:bid = bufnr('%')
@@ -135,9 +117,7 @@ fun! util#traverse(node, fRprime, fRBfr, fRAftr, fBfr, fAftr, h, v)
 
   endif
 
-  if !(a:fRAftr is v:null)
-    call a:fRAftr(a:node, l:v)
-  endif
+  return l:v
 
 endfun
 
