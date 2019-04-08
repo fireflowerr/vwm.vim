@@ -12,48 +12,50 @@ let s:def_layt = {
       \}
 
 fun! s:normalize_root(node)
-  let a:node['root'] = 1
-  if !exists('a:node.name')
-    let a:node['name'] = ''
+  let l:node = a:node
+  let l:node['root'] = 1
+  if !exists('l:node.name')
+    let l:node['name'] = ''
   endif
-  if !exists('a:node.abs')
-    let a:node['abs'] = 1
+  if !exists('l:node.abs')
+    let l:node['abs'] = 1
   endif
-  if !exists('a:node.opnBfr')
-    let a:node['opnBfr'] = []
+  if !exists('l:node.opnBfr')
+    let l:node['opnBfr'] = []
   endif
-  if !exists('a:node.opnAftr')
-    let a:node['opnAftr'] = []
+  if !exists('l:node.opnAftr')
+    let l:node['opnAftr'] = []
   endif
-  if !exists('a:node.clsBfr')
-    let a:node['clsBfr'] = []
+  if !exists('l:node.clsBfr')
+    let l:node['clsBfr'] = []
   endif
-  if !exists('a:node.clsAftr')
-    let a:node['clsAftr'] = []
+  if !exists('l:node.clsAftr')
+    let l:node['clsAftr'] = []
   endif
-  if !exists('a:node.active')
-    let a:node['active'] = 0
+  if !exists('l:node.active')
+    let l:node['active'] = 0
+  endif
+  if !exists('l:node.cache')
+    let l:node['cache'] = 1
   endif
 endfun
 
 fun! s:normalize_node(node)
-  if !exists('a:node.sz')
-    let a:node['sz'] = 0
+  let l:node = a:node
+  if !exists('l:node.sz')
+    let l:node['sz'] = 0
   endif
-  if !exists('a:node.bid')
-    let a:node['bid'] = -1
+  if !exists('l:node.bid')
+    let l:node['bid'] = -1
   endif
-  if !exists('a:node.cache')
-    let a:node['cache'] = 1
+  if !exists('l:node.init')
+    let l:node['init'] = []
   endif
-  if !exists('a:node.init')
-    let a:node['init'] = []
+  if !exists('l:node.restore')
+    let l:node['restore'] = []
   endif
-  if !exists('a:node.restore')
-    let a:node['restore'] = []
-  endif
-  if !exists('a:node.focus')
-    let a:node['focus'] = 0
+  if !exists('l:node.focus')
+    let l:node['focus'] = 0
   endif
 
   " set is just a convience wrapper for setlocal cmd
@@ -83,6 +85,11 @@ fun! s:normalize_node(node)
   endif
 
   return a:node
+endfun
+
+fun! g:VwmNormalize(node)
+  call s:normalize_root(a:node)
+  call s:normalize_node(a:node)
 endfun
 
 fun! s:is_empty(clct)
@@ -120,3 +127,5 @@ command! VwmRefresh call s:init()
 command! -nargs=+ VwmOpen call vwm#open(<f-args>)
 command! -nargs=+ VwmClose call vwm#close(<f-args>)
 command! -nargs=+ VwmToggle call vwm#toggle(<f-args>)
+command! -nargs=0 VwmList call vwm#list_active()
+command! -nargs=0 VwmRefresh call vwm#repop_active()

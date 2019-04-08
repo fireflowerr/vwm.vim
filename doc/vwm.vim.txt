@@ -23,6 +23,37 @@ COMMANDS                                                    *vwm.vim-commands*
 ==============================================================================
 CONFIGURATION                                          *vwm.vim-configuration*
 
+g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
+  If true force vertical nodes to overlay horizantal. See below for a visual
+  example.
+  NOTE: This may option may reduce performance as it necessarily causes two
+    additional traversals over the layout tree.
+          >
+
+    g:vwm#force_vert_first = 0
+    ____________________
+    |     |            |
+    |     |            |
+    |win 3|            |
+    |     |            |
+    |     |            |
+    |     |            |
+    |------------------|
+    |  win 1  | win 2  |
+    |_________|________|
+
+    g:vwm#force_vert_first = 1
+    ____________________
+    |     |            |
+    |     |            |
+    |win 3|            |
+    |     |            |
+    |     |            |
+    |     |            |
+    |     |------------|
+    |     |win 1 |win 2|
+    |_____|______|_____|
+
 g:vwm#layouts                                                  *g:vwm#layouts*
   A list containing layouts accessible to this plugin. See |vwm-layouts| and
   |vwm-layouts-example|.
@@ -50,8 +81,17 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {cache}[default=1]: If true, save buffers closed with |:VwmClose| and
   attempt to reuse cached buffer when |:VwmOpen| is next called.
 
-  {unlisted}[default=1]: If true, all buffers derived from this layout will be
-  made unlisted.
+  {opnBfr}[default=[]]: A list of commands or funcrefs to be executed before opening a
+  given layout.
+
+  {openAftr}[deault=[]]: A list of commands or funcrefs to be executed before opening
+  a given layout.
+
+  {clsBfr}[default=[]]: A list of commands or funcrefs to be executed before closing a
+  given layout.
+
+  {clsAftr}[deault=[]]: A list of commands or funcrefs to be executed before closing
+  given layout.
                                                            *vwm-layouts-child*
   Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
@@ -59,7 +99,8 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {'init'}: A list of commands to run on buffer creation. Accepts Strings and
   Funcrefs.
 
-  {'restore'}[opt]: A list of commands to run on buffer restoration. Accepts Strings and
+  {'restore'}[opt]: A list of commands to run on buffer restoration. Accepts Strings a
+  nd
   Funcrefs.
 
   {'sz'}[opt]: The size of the window. Default to half of the current window.
@@ -72,10 +113,11 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {bot}[opt]: Layout bot relative of this layout.
 
-  {fixed}[default=0]: If true, the buffer's size will be made fixed.
-
   {focus}[default=0]: If true, this node's window will be focused at the end
   of layout realization.
+
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
+  For more info see `:help hidden-options` .
 
 ==============================================================================
 EXAMPLES                                                    *vwm.vim-examples*
