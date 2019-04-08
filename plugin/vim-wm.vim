@@ -13,6 +13,18 @@ let s:def_layt = {
 
 fun! s:normalize_root(node)
   let a:node['root'] = 1
+  if !exists('a:node.name')
+    let a:node['name'] = ''
+  endif
+  if !exists('a:node.abs')
+    let a:node['abs'] = 1
+  endif
+  if !exists('a:node.bfr')
+    let a:node['bfr'] = []
+  endif
+  if !exists('a:node.aftr')
+    let a:node['aftr'] = []
+  endif
 endfun
 
 fun! s:normalize_node(node)
@@ -21,9 +33,6 @@ fun! s:normalize_node(node)
   endif
   if !exists('a:node.bid')
     let a:node['bid'] = -1
-  endif
-  if !exists('a:node.name')
-    let a:node['name'] = ''
   endif
   if !exists('a:node.cache')
     let a:node['cache'] = 1
@@ -34,14 +43,8 @@ fun! s:normalize_node(node)
   if !exists('a:node.restore')
     let a:node['restore'] = []
   endif
-  if !exists('a:node.abs')
-    let a:node['abs'] = 1
-  endif
   if !exists('a:node.active')
     let a:node['active'] = 0
-  endif
-  if !exists('a:node.fixed')
-    let a:node['fixed'] = 0
   endif
   if !exists('a:node.focus')
     let a:node['focus'] = 0

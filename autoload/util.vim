@@ -88,7 +88,11 @@ endfun
 
 " Right recursive traverse and do
 " orientation is optional 1:left, 2:right, 3:top, 4:bot
-fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr, h, v)
+fun! util#traverse(node, fRprime, fRBfr, fRAftr, fBfr, fAftr, h, v)
+
+  if !(a:fRBfr is v:null)
+    call a:fRBfr(a:node)
+  endif
 
   let l:v = {}
   let l:bid = bufnr('%')
@@ -169,4 +173,16 @@ fun! s:traverse_main(node, fBfr, fAftr, ori, fromRoot)
     call a:fAftr(a:node, l:v, a:ori)
   endif
 
+  return a:node
+endfun
+
+" Execute layout defined commands. Accept funcrefs and Strings
+fun! util#execute_cmds(cmds)
+  for Cmd in a:cmds
+    if type(Cmd) == 2
+      call Cmd()
+    else
+      execute(Cmd)
+    endif
+  endfor
 endfun

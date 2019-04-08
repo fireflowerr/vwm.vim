@@ -9,7 +9,7 @@ fun! vwm#close(name)
 
   let l:Funcr = function('s:close_helper', [l:node.cache])
   let l:FRaftr = function('s:deactivate')
-  call util#traverse(l:node, v:null, l:FRaftr, v:null, l:Funcr, 1, 1)
+  call util#traverse(l:node, v:null, v:null, l:FRaftr, v:null, l:Funcr, 1, 1)
 endfun
 
 fun! s:close_helper(cache, node, t1, t2)
@@ -45,33 +45,59 @@ fun! vwm#open(name)
 
   "If this root node contains a vertical split, first save then close all active horizantal splits
     for hnode in l:hnodes
-      call util#traverse(hnode, v:null, l:FDct, v:null, l:FClose, 1, 1)
+      call util#traverse(hnode, v:null, v:null, l:FDct, v:null, l:FClose, 1, 1)
     endfor
 
   endif
 
-
   let l:Primer = function('s:populate_root')
-  let l:RAftr = function('s:update_node')
+  let l:RAftr = function('s:update_root')
   let l:FBfr = function('s:populate_child')
   let l:FAftr = function('s:fill_winnode')
+  let l:FRbr = function('s:ex_root_bfr')
 
   " Begin winnode population
-  call util#traverse(l:node, l:Primer, l:RAftr, l:FBfr, l:FAftr, 1, 1)
+  call util#traverse(l:node, l:Primer, l:FRbr, l:RAftr, l:FBfr, l:FAftr, 1, 1)
 
   " Restore hsplits
   if l:hv
 
     for hnode in l:hnodes
-      call util#traverse(hnode, l:Primer, l:RAftr, l:FBfr, l:FAftr, 0, 1)
+      call util#traverse(hnode, l:Primer, v:null, l:RAftr, l:FBfr, l:FAftr, 0, 1)
     endfor
 
+  endif
+endfun
+
+fun! s:ex_root_bfr(root)
+  call util#execute_cmds(a:root.bfr)
+endfun
+
+fun! s:ex_root_aftr(root)
+  call util#execute_cmds(a:root.aftr)
+endfun
+
+fun! s:update_root(root, def)
+  call s:update_node(a:root, a:def)
+
+  if exists('a:root.fid') > 0 && util#buf_active(a:root.fid)
+    execute(bufwinnr(a:root.fid) . 'wincmd w')
+  endif
+  if exists('a:root.aftr')
+    call s:ex_root_aftr(a:root)
   endif
 endfun
 
 fun! s:update_node(node, def)
   for ori in keys(a:def)
     let a:node[ori] = a:def[ori]
+
+    " Put the bid of the buffer to be focused into its parent.
+    if a:def[ori].focus > 0
+      let a:node['fid'] = a:def[ori].bid
+    elseif exists('a:def[' . ori . '].fid')
+      let a:node['fid'] = a:def[ori].fid
+    endif
   endfor
 endfun
 
@@ -120,11 +146,13 @@ fun! s:buf_mktmp()
   setlocal nobl bh=wipe bt=nofile noswapfile
 endfun
 
-fun! s:fill_winnode(node, trash, ori)
+fun! s:fill_winnode(node, def, ori)
   call util#resz_winnode(a:node, a:ori)
   let a:node.bid = s:place_content(a:node)
   call util#resz_winnode(a:node, a:ori)
   execute(bufwinnr(a:node.bid) . 'wincmd w')
+
+  call s:update_node(a:node, a:def)
 endfun
 
 fun! vwm#toggle(name)
@@ -156,12 +184,12 @@ fun! s:place_content(node)
   " If buf exists, place it in current window and kill tmp buff
   if util#buf_exists(a:node.bid)
     execute(a:node.bid . 'b')
-    call s:execute_cmds(a:node.restore)
+    call util#execute_cmds(a:node.restore)
     return bufnr('%')
   endif
 
   " Otherwise create the buff and force it to be in the current window
-  call s:execute_cmds(a:node.init)
+  call util#execute_cmds(a:node.init)
   let l:final_last = bufwinnr('$')
 
   if l:init_last != l:final_last
@@ -175,13 +203,3 @@ fun! s:place_content(node)
   return bufnr('%')
 endfun
 
-" Execute layout defined commands. Accept funcrefs and Strings
-fun! s:execute_cmds(cmds)
-  for Cmd in a:cmds
-    if type(Cmd) == 2
-      call Cmd()
-    else
-      execute(Cmd)
-    endif
-  endfor
-endfun
