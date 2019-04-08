@@ -7,9 +7,13 @@ fun! vwm#close(name)
   endif
   let l:node = g:vwm#layouts[l:node_index]
 
+  call util#execute_cmds(l:node.clsBfr)
   let l:Funcr = function('s:close_helper', [l:node.cache])
-  let l:FRaftr = function('s:deactivate')
-  call util#traverse(l:node, v:null, v:null, l:FRaftr, v:null, l:Funcr, 1, 1)
+  call util#traverse(l:node, v:null, v:null, l:Funcr, 1, 1)
+  call s:deactivate(l:node)
+
+  call util#execute_cmds(l:node.clsAftr)
+  call s:repop_active()
 endfun
 
 fun! s:close_helper(cache, node, t1, t2)
@@ -23,7 +27,7 @@ fun! s:close_helper(cache, node, t1, t2)
   endif
 endfun
 
-fun! s:deactivate(node, trash)
+fun! s:deactivate(node)
   let a:node['active'] = 0
 endfun
 
@@ -32,41 +36,50 @@ fun! vwm#open(name)
   if l:nodeIndex == -1
     return -1
   endif
-
   let l:node = g:vwm#layouts[l:nodeIndex]
+  call util#execute_cmds(l:node.opnBfr)
+
   let l:node.bid = bufnr('%')
-  let l:hv = 0
+  let l:node.active = 1
+  call s:repop_active()
+endfun
 
-  if util#node_has_vert(l:node)
-    let l:hv = 1
-    let l:FClose = function('s:close_helper', [1])
-    let l:FDct = function('s:deactivate')
-    let l:hnodes = util#filter_hnodes(util#active_nodes())
+fun! s:repop_active()
+  let l:FClose = function('s:close_helper', [1])
+  let l:FDct = function('s:deactivate')
+  let l:active = util#active_nodes()
 
-  "If this root node contains a vertical split, first save then close all active horizantal splits
-    for hnode in l:hnodes
-      call util#traverse(hnode, v:null, v:null, l:FDct, v:null, l:FClose, 1, 1)
-    endfor
-
-  endif
+  for anode in l:active
+    call util#traverse(anode, v:null, v:null, l:FClose, 1, 1)
+  endfor
 
   let l:Primer = function('s:populate_root')
-  let l:RAftr = function('s:update_root')
   let l:FBfr = function('s:populate_child')
   let l:FAftr = function('s:fill_winnode')
-  let l:FRbr = function('s:ex_root_bfr')
 
-  " Begin winnode population
-  call util#traverse(l:node, l:Primer, l:FRbr, l:RAftr, l:FBfr, l:FAftr, 1, 1)
+
+  let l:p = g:vwm#force_vert_first
+  " Restore vsplits
+  for vnode in l:active
+    call util#traverse(vnode, l:Primer, l:FBfr, l:FAftr, !l:p, l:p)
+  endfor
 
   " Restore hsplits
-  if l:hv
+  for hnode in l:active
+    call util#traverse(hnode, l:Primer, l:FBfr, l:FAftr, l:p, !l:p)
+  endfor
 
-    for hnode in l:hnodes
-      call util#traverse(hnode, l:Primer, v:null, l:RAftr, l:FBfr, l:FAftr, 0, 1)
+  if l:p
+    for anode in l:active
+      call util#traverse(anode, v:null, v:null, l:FClose, !l:p, l:p)
     endfor
 
+    for hnode in l:active
+      call util#traverse(hnode, l:Primer, l:FBfr, l:FAftr, !l:p, l:p)
+    endfor
   endif
+
+
 endfun
 
 fun! s:ex_root_bfr(root)
@@ -122,7 +135,6 @@ fun! s:populate_root(node, ori)
     call s:populate_child(a:node, a:ori)
   endif
 
-  let a:node['active'] = 1
 endfun
 
 fun! s:populate_child(node, ori)
@@ -185,21 +197,26 @@ fun! s:place_content(node)
   if util#buf_exists(a:node.bid)
     execute(a:node.bid . 'b')
     call util#execute_cmds(a:node.restore)
-    return bufnr('%')
-  endif
 
   " Otherwise create the buff and force it to be in the current window
-  call util#execute_cmds(a:node.init)
-  let l:final_last = bufwinnr('$')
+  else
+    call util#execute_cmds(a:node.init)
+    let l:final_last = bufwinnr('$')
 
-  if l:init_last != l:final_last
-    let l:final_buf = winbufnr(l:final_last)
-    execute(l:final_last . 'wincmd w')
-    close
-    execute(l:init_wid . 'wincmd w')
-    execute(l:final_buf . 'b')
+    if l:init_last != l:final_last
+      let l:final_buf = winbufnr(l:final_last)
+      execute(l:final_last . 'wincmd w')
+      close
+      execute(l:init_wid . 'wincmd w')
+      execute(l:final_buf . 'b')
+    endif
   endif
+
+  let l:set_cmd = 'setlocal'
+  for val in a:node['set']
+    let l:set_cmd = l:set_cmd . ' ' . val
+  endfor
+  execute(l:set_cmd)
 
   return bufnr('%')
 endfun
-
