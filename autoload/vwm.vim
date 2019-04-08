@@ -18,19 +18,25 @@ fun! vwm#toggle(...)
 endfun
 
 fun! s:close(name)
-  let l:node_index = util#lookup_node(a:name)
-  if l:node_index == -1
-    return -1
+  if type(a:name) == 1
+    let l:node_index = util#lookup_node(a:name)
+    if l:node_index == -1
+      return -1
+    endif
+    let l:node = g:vwm#layouts[l:node_index]
+  elseif type(a:name) == 4
+    let l:node = a:name
+  else
+    let l:err = 'unsupported type ' . type(a:name)
   endif
-  let l:node = g:vwm#layouts[l:node_index]
 
   call util#execute_cmds(l:node.clsBfr)
   let l:Funcr = function('s:close_helper', [l:node.cache])
-  call util#traverse(l:node, v:null, v:null, l:Funcr, 1, 1)
+  call util#traverse(l:node, v:null, v:null, v:null, l:Funcr, 1, 1)
   call s:deactivate(l:node)
 
   call util#execute_cmds(l:node.clsAftr)
-  call s:repop_active()
+  call vwm#repop_active()
 endfun
 
 fun! s:close_helper(cache, node, t1, t2)
@@ -49,62 +55,62 @@ fun! s:deactivate(node)
 endfun
 
 fun! s:open(name)
-  let l:nodeIndex = util#lookup_node(a:name)
-  if l:nodeIndex == -1
-    return -1
+  if type(a:name) == 1
+    let l:nodeIndex = util#lookup_node(a:name)
+    if l:nodeIndex == -1
+      return -1
+    endif
+    let l:node = g:vwm#layouts[l:nodeIndex]
+  elseif type(a:name) == 4
+    let l:node = a:name
+  else
+    let l:err = 'unsupported type ' . type(a:name)
+    echoerr l:err
   endif
-  let l:node = g:vwm#layouts[l:nodeIndex]
+
   call util#execute_cmds(l:node.opnBfr)
 
   let l:node.bid = bufnr('%')
   let l:node.active = 1
-  call s:repop_active()
+  call vwm#repop_active()
 endfun
 
-fun! s:repop_active()
+fun! vwm#repop_active()
   let l:FClose = function('s:close_helper', [1])
   let l:FDct = function('s:deactivate')
   let l:active = util#active_nodes()
 
   for anode in l:active
-    call util#traverse(anode, v:null, v:null, l:FClose, 1, 1)
+    call util#traverse(anode, v:null, v:null, v:null, l:FClose, 1, 1)
   endfor
 
   let l:Primer = function('s:populate_root')
   let l:FBfr = function('s:populate_child')
   let l:FAftr = function('s:fill_winnode')
+  let l:FRAftr = function('s:update_root')
 
 
   let l:p = g:vwm#force_vert_first
   " Restore vsplits
   for vnode in l:active
-    call util#traverse(vnode, l:Primer, l:FBfr, l:FAftr, !l:p, l:p)
+    call util#traverse(vnode, l:Primer, l:FRAftr, l:FBfr, l:FAftr, !l:p, l:p)
   endfor
 
   " Restore hsplits
   for hnode in l:active
-    call util#traverse(hnode, l:Primer, l:FBfr, l:FAftr, l:p, !l:p)
+    call util#traverse(hnode, l:Primer, l:FRAftr, l:FBfr, l:FAftr, l:p, !l:p)
   endfor
 
   if l:p
     for anode in l:active
-      call util#traverse(anode, v:null, v:null, l:FClose, !l:p, l:p)
+      call util#traverse(anode, v:null, v:null, v:null, l:FClose, !l:p, l:p)
     endfor
 
     for hnode in l:active
-      call util#traverse(hnode, l:Primer, l:FBfr, l:FAftr, !l:p, l:p)
+      call util#traverse(hnode, l:Primer, l:FRAftr, l:FBfr, l:FAftr, !l:p, l:p)
     endfor
   endif
 
-
-endfun
-
-fun! s:ex_root_bfr(root)
-  call util#execute_cmds(a:root.bfr)
-endfun
-
-fun! s:ex_root_aftr(root)
-  call util#execute_cmds(a:root.aftr)
 endfun
 
 fun! s:update_root(root, def)
@@ -112,9 +118,6 @@ fun! s:update_root(root, def)
 
   if exists('a:root.fid') > 0 && util#buf_active(a:root.fid)
     execute(bufwinnr(a:root.fid) . 'wincmd w')
-  endif
-  if exists('a:root.aftr')
-    call s:ex_root_aftr(a:root)
   endif
 endfun
 
@@ -236,4 +239,11 @@ fun! s:place_content(node)
   execute(l:set_cmd)
 
   return bufnr('%')
+endfun
+
+fun! vwm#list_active()
+  let l:active = []
+  for node in util#active_nodes()
+    echom node.name
+  endfor
 endfun

@@ -74,7 +74,7 @@ endfun
 
 " Right recursive traverse and do
 " orientation is optional 1:left, 2:right, 3:top, 4:bot
-fun! util#traverse(node, fRprime, fBfr, fAftr, h, v)
+fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr, h, v)
 
   let l:v = {}
   let l:bid = bufnr('%')
@@ -117,8 +117,11 @@ fun! util#traverse(node, fRprime, fBfr, fAftr, h, v)
 
   endif
 
-  return l:v
+  if !(a:fRAftr is v:null)
+    call a:fRAftr(a:node, l:v)
+  endif
 
+  return a:node
 endfun
 
 fun! s:traverse_main(node, fBfr, fAftr, ori, fromRoot)
