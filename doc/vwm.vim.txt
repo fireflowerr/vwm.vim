@@ -9,19 +9,55 @@ CONTENTS                                                    *vwm.vim-contents*
 ==============================================================================
 COMMANDS                                                    *vwm.vim-commands*
 
-:VwmOpen {name}                                                     
+:VwmOpen {name}
   Opens the layout specified by {name}
 
-:VwmClose {name}                                                   
+:VwmClose {name}
   Closes the layout specified by {name}
 
 :VwmToggle {name}
-  Togglesthe layout specified by {name}
+  Toggles the layout specified by {name}
 
 :VwmRefresh
-  Reinitializes the layout definitions defined in |g:vwm#layouts|
+  Repopulates all layouts. Can be used to reformat all open layouts back to
+  their original state.
+
+:VwmReinit
+  After manual changes to g:vwm#layouts, call to re-normalize the dictionary.
+
 ==============================================================================
 CONFIGURATION                                          *vwm.vim-configuration*
+
+g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
+  If true force vertical nodes to overlay horizantal. See below for a visual
+  example.
+  NOTE: This may option may reduce performance as it necessarily causes two
+    additional traversals over the layout tree.
+          >
+
+    g:vwm#force_vert_first = 0
+    ____________________
+    |     |            |
+    |     |            |
+    |win 3|            |
+    |     |            |
+    |     |            |
+    |     |            |
+    |------------------|
+    |  win 1  | win 2  |
+    |_________|________|
+
+    g:vwm#force_vert_first = 1
+    ____________________
+    |     |            |
+    |     |            |
+    |win 3|            |
+    |     |            |
+    |     |            |
+    |     |            |
+    |     |------------|
+    |     |win 1 |win 2|
+    |_____|______|_____|
 
 g:vwm#layouts                                                  *g:vwm#layouts*
   A list containing layouts accessible to this plugin. See |vwm-layouts| and
@@ -50,15 +86,27 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {cache}[default=1]: If true, save buffers closed with |:VwmClose| and
   attempt to reuse cached buffer when |:VwmOpen| is next called.
 
-  {unlisted}[default=1]: If true, all buffers derived from this layout will be
-  made unlisted.
+  {opnBfr}[default=[]]: A list of commands or funcrefs to be executed before opening a
+  given layout.
+
+  {openAftr}[deault=[]]: A list of commands or funcrefs to be executed before opening
+  a given layout.
+
+  {clsBfr}[default=[]]: A list of commands or funcrefs to be executed before closing a
+  given layout.
+
+  {clsAftr}[deault=[]]: A list of commands or funcrefs to be executed before closing
+  given layout.
                                                            *vwm-layouts-child*
-  Each child node consits of itself and 0 more child nodes. A cihld node
+  Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
 
-  {'init'}: A list of commands to run on buffer creation.
+  {'init'}: A list of commands to run on buffer creation. Accepts Strings and
+  Funcrefs.
 
-  {'restore'}[opt]: A list of commands to run on buffer restoration.
+  {'restore'}[opt]: A list of commands to run on buffer restoration. Accepts Strings a
+  nd
+  Funcrefs.
 
   {'sz'}[opt]: The size of the window. Default to half of the current window.
 
@@ -70,78 +118,12 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {bot}[opt]: Layout bot relative of this layout.
 
+  {focus}[default=0]: If true, this node's window will be focused at the end
+  of layout realization.
+
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
+  For more info see `:help hidden-options` .
+
 ==============================================================================
-EXAMPLE                                                     *vwm.vim-examples*
-                                                         *vwm-layouts-example*
-  The following example will create 3 layouts, a vimdiff style layout, a
-  frame, and lastly a terminal panel for neovim users. Test the commands with
-  `VwmOpen vimdiff`, `VwmOpen frame`, `VwmOpen test`, making sure to run
-  VwmClose _name_ between each. >
-
-      let s:vimdiff = {
-            \  'name': 'vimdiff',
-            \  'top':
-            \  {
-            \    'init': ['wincmd o', 'normal ibase'],
-            \    'left': 
-            \    {
-            \      'init': ['normal ilocal']
-            \    },
-            \    'right': 
-            \    {
-            \      'init': ['normal iremote']
-            \    }
-            \  },
-            \  'bot': 
-            \  {
-            \    'init': ['normal imerge'],
-            \    'sz': 20
-            \  }
-            \}
-
-      let s:frame = {
-            \  'name': 'frame',
-            \  'top': {
-            \    'sz': 10,
-            \    'left': {
-            \      'init': []
-            \    },
-            \    'right': {
-            \      'init': []
-            \    }
-            \  },
-            \  'bot': {
-            \    'sz': 10,
-            \    'left': {
-            \      'init': []
-            \    },
-            \    'right': {
-            \      'init': []
-            \    }
-            \  },
-            \  'left': {
-            \    'sz': 50
-            \  },
-            \  'right': {
-            \    'sz': 50
-            \  }
-            \}
-
-      let s:test = {
-            \    'name': 'test',
-            \    'bot':
-            \    {
-            \      'init': ['call termopen("zsh", {"detach": 0})'],
-            \      'sz': 12,
-            \      'left': 
-            \      {
-            \        'init': ['call termopen("zsh", {"detach": 0})'],
-            \      },
-            \      'right':
-            \      {
-            \        'init': ['call termopen("zsh", {"detach": 0})'],
-            \      }
-            \    }
-            \  }
-
-      let g:vwm#layouts = [s:vimdiff, s:frame, s:test]
+EXAMPLES                                                    *vwm.vim-examples*
+see https://github.com/paroxayte/vwm.vim#examples
