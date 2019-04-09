@@ -123,7 +123,7 @@ endfun
 
 call s:init()
 
-command! VwmRefresh call s:init()
+command! VwmReinit call s:init()
 command! -nargs=+ VwmOpen call vwm#open(<f-args>)
 command! -nargs=+ VwmClose call vwm#close(<f-args>)
 command! -nargs=+ VwmToggle call vwm#toggle(<f-args>)
