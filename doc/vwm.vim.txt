@@ -32,7 +32,7 @@ COMMANDS                                                    *vwm.vim-commands*
 CONFIGURATION                                          *vwm.vim-configuration*
 
 g:vwm#safe_mode                                              *g:vwm#safe_mode*
-  If true, adds an optimized VwmRefresh inbetween layout openings and c
+  If true, adds an optimized VwmRefresh inbetween layout openings and
   closings. May cause a noticable drop in performance. Consider using this
   if you use many different layouts and find yourself running VwmRefresh
   often.
