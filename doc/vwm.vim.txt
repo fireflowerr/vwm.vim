@@ -25,6 +25,9 @@ COMMANDS                                                    *vwm.vim-commands*
 :VwmReinit
   After manual changes to g:vwm#layouts, call to re-normalize the dictionary.
 
+:VwmList
+  Echos a message containing a list of all active layouts.
+
 ==============================================================================
 CONFIGURATION                                          *vwm.vim-configuration*
 
