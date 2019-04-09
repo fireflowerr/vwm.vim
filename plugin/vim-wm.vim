@@ -42,6 +42,7 @@ endfun
 
 fun! s:normalize_node(node)
   let l:node = a:node
+  let l:node['root'] = 0
   if !exists('l:node.sz')
     let l:node['sz'] = 0
   endif
@@ -88,8 +89,8 @@ fun! s:normalize_node(node)
 endfun
 
 fun! g:VwmNormalize(node)
-  call s:normalize_root(a:node)
   call s:normalize_node(a:node)
+  call s:normalize_root(a:node)
 endfun
 
 fun! s:is_empty(clct)
@@ -107,8 +108,8 @@ fun! s:init()
   if exists('g:vwm#layouts')
     let l:i = 0
     for node in g:vwm#layouts
-      call s:normalize_root(node)
       call s:normalize_node(node)
+      call s:normalize_root(node)
       let l:i = l:i + 1
     endfor
   else
@@ -131,4 +132,4 @@ command! -nargs=+ VwmOpen call vwm#open(<f-args>)
 command! -nargs=+ VwmClose call vwm#close(<f-args>)
 command! -nargs=+ VwmToggle call vwm#toggle(<f-args>)
 command! -nargs=0 VwmList call vwm#list_active()
-command! -nargs=0 VwmRefresh call vwm#repop_active()
+command! -nargs=0 VwmRefresh call vwm#repop_active(v:null)

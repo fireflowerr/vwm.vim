@@ -36,7 +36,10 @@ fun! s:close(name)
   call s:deactivate(l:node)
 
   call util#execute_cmds(l:node.clsAftr)
-  call vwm#repop_active()
+
+  if g:vwm#safe_mode
+    call vwm#repop_active(v:null)
+  endif
 endfun
 
 fun! s:close_helper(cache, node, t1, t2)
@@ -74,13 +77,13 @@ fun! s:open(name)
   let l:node.active = 1
 
   if g:vwm#safe_mode
-    call vwm#repop_active()
-  else
     call vwm#repop_active(l:node)
+  else
+    call vwm#repop_active(l:node, l:node)
   endif
 endfun
 
-fun! vwm#repop_active(...)
+fun! vwm#repop_active(node, ...)
   let l:FClose = function('s:close_helper', [1])
   let l:FDct = function('s:deactivate')
 
@@ -96,7 +99,7 @@ fun! vwm#repop_active(...)
   let l:Primer = function('s:populate_root')
   let l:FBfr = function('s:populate_child')
   let l:FAftr = function('s:fill_winnode')
-  let l:FRAftr = function('s:update_root')
+  let l:FRAftr = function('s:update_node')
 
 
   let l:p = g:vwm#force_vert_first && g:vwm#safe_mode
@@ -122,14 +125,6 @@ fun! vwm#repop_active(...)
 
 endfun
 
-fun! s:update_root(root, def)
-  call s:update_node(a:root, a:def)
-
-  if exists('a:root.fid') > 0 && util#buf_active(a:root.fid)
-    execute(bufwinnr(a:root.fid) . 'wincmd w')
-  endif
-endfun
-
 fun! s:update_node(node, def)
   for ori in keys(a:def)
     let a:node[ori] = a:def[ori]
@@ -141,6 +136,13 @@ fun! s:update_node(node, def)
       let a:node['fid'] = a:def[ori].fid
     endif
   endfor
+
+  if a:node.root
+    if exists('a:node.fid')
+      execute(bufwinnr(a:node.fid) . 'wincmd w')
+    endif
+    call util#execute_cmds(a:node.opnAftr)
+  endif
 endfun
 
 fun! s:populate_root(node, ori)
