@@ -72,14 +72,23 @@ fun! s:open(name)
 
   let l:node.bid = bufnr('%')
   let l:node.active = 1
-  call vwm#repop_active()
+
+  if g:vwm#safe_mode
+    call vwm#repop_active()
+  else
+    call vwm#repop_active(l:node)
+  endif
 endfun
 
-fun! vwm#repop_active()
+fun! vwm#repop_active(...)
   let l:FClose = function('s:close_helper', [1])
   let l:FDct = function('s:deactivate')
-  let l:active = util#active_nodes()
 
+  if len(a:000)
+    let l:active = a:000
+  else
+    let l:active = util#active_nodes()
+  endif
   for anode in l:active
     call util#traverse(anode, v:null, v:null, v:null, l:FClose, 1, 1)
   endfor
@@ -90,7 +99,7 @@ fun! vwm#repop_active()
   let l:FRAftr = function('s:update_root')
 
 
-  let l:p = g:vwm#force_vert_first
+  let l:p = g:vwm#force_vert_first && g:vwm#safe_mode
   " Restore vsplits
   for vnode in l:active
     call util#traverse(vnode, l:Primer, l:FRAftr, l:FBfr, l:FAftr, !l:p, l:p)

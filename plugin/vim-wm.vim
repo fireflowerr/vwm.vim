@@ -119,6 +119,9 @@ fun! s:init()
   if !exists('g:vwm#force_vert_first')
     let g:vwm#force_vert_first = 0
   endif
+  if !exists('g:vwm#safe_mode')
+    let g:vwm#safe_mode = 0
+  endif
 endfun
 
 call s:init()
