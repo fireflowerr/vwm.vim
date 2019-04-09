@@ -31,8 +31,15 @@ COMMANDS                                                    *vwm.vim-commands*
 ==============================================================================
 CONFIGURATION                                          *vwm.vim-configuration*
 
+g:vwm#safe_mode                                              *g:vwm#safe_mode*
+  If true, adds an optimized VwmRefresh inbetween layout openings and c
+  closings. May cause a noticable drop in performance. Consider using this
+  if you use many different layouts and find yourself running VwmRefresh
+  often.
+
 g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
-  If true force vertical nodes to overlay horizantal. See below for a visual
+  Requires |g:vwm#safe_mode| = 1. If true force vertical nodes to overlay horizantal. See below for
+  a visual
   example.
   NOTE: This may option may reduce performance as it necessarily causes two
     additional traversals over the layout tree.
