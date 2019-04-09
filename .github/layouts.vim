@@ -2,9 +2,10 @@
 "
 let s:vimdiff = {
       \  'name': 'vimdiff',
+      \  'opnBfr': ['tabnew', 'normal imerge'],
       \  'top':
       \  {
-      \    'init': ['wincmd o', 'normal ibase'],
+      \    'init': ['normal ibase'],
       \    'left':
       \    {
       \      'init': ['normal ilocal']
@@ -13,11 +14,6 @@ let s:vimdiff = {
       \    {
       \      'init': ['normal iremote']
       \    }
-      \  },
-      \  'bot':
-      \  {
-      \    'init': ['normal imerge'],
-      \    'sz': 20
       \  }
       \}
 
