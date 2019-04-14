@@ -133,7 +133,7 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   of layout realization.
 
   {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
-  For more info see `:help hidden-options` .
+  For more info see |hidden-options|
 
                                                            *vwm-layouts-float*
   Floating windows require a supporting version of neovim. Verify that
@@ -141,7 +141,7 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   defined via funcref. Each floating layout contains the following
   attributes:
   NOTE: The values here are a simple wrapper around the parameters of
-  *nvim_open_win()* .
+  |nvim_open_win()| .
 
   {x}[req]: The x coordinate to place the window corner defined by anchor.
 
@@ -162,7 +162,7 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   values include `NE`, `SW`, `SE`.
 
   {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
-  For more info see `:help hidden-options` .
+  For more info see |hidden-options| .
 
 ==============================================================================
 EXAMPLES                                                    *vwm.vim-examples*
