@@ -38,25 +38,28 @@ fun! s:normalize_root(node)
   if !exists('l:node.cache')
     let l:node['cache'] = 1
   endif
+  if exists('l:node.float')
+    call s:normalize_float(l:node.float)
+  endif
 endfun
 
 fun! s:normalize_node(node)
-  let l:node = a:node
-  let l:node['root'] = 0
-  if !exists('l:node.sz')
-    let l:node['sz'] = 0
+
+  let a:node['root'] = 0
+  if !exists('a:node.sz')
+    let a:node['sz'] = 0
   endif
-  if !exists('l:node.bid')
-    let l:node['bid'] = -1
+  if !exists('a:node.bid')
+    let a:node['bid'] = -1
   endif
-  if !exists('l:node.init')
-    let l:node['init'] = []
+  if !exists('a:node.init')
+    let a:node['init'] = []
   endif
-  if !exists('l:node.restore')
-    let l:node['restore'] = []
+  if !exists('a:node.restore')
+    let a:node['restore'] = []
   endif
-  if !exists('l:node.focus')
-    let l:node['focus'] = 0
+  if !exists('a:node.focus')
+    let a:node['focus'] = 0
   endif
 
   " set is just a convience wrapper for setlocal cmd
@@ -86,6 +89,48 @@ fun! s:normalize_node(node)
   endif
 
   return a:node
+endfun
+
+fun! s:normalize_float(node)
+  let a:node.root = 0
+  if !exists('a:node.x')
+    echoerr "Missing key x"
+  endif
+  if !exists('a:node.y')
+    echoerr "Missing key y"
+  endif
+  if !exists('a:node.width')
+    echoerr "Missing key width"
+  endif
+  if !exists('a:node.height')
+    echoerr "Missing key height"
+  endif
+  if !exists('a:node.relative')
+    let a:node['relative'] = 'editor'
+  endif
+  if !exists('a:node.bid')
+    let a:node['bid'] = -1
+  endif
+  if !exists('a:node.init')
+    let a:node['init'] = []
+  endif
+  if !exists('a:node.restore')
+    let a:node['restore'] = []
+  endif
+  if !exists('a:node.focus')
+    let a:node['focus'] = 0
+  endif
+  if !exists('a:node.focusable')
+    let a:node['focusable'] = 1
+  endif
+  if !exists('a:node.anchor')
+    let a:node['anchor'] = 'NW'
+  endif
+
+  " set is just a convience wrapper for setlocal cmd
+  if !exists('a:node.set')
+    let a:node['set'] = ['bh=hide', 'nobl']
+  endif
 endfun
 
 fun! g:VwmNormalize(node)
@@ -123,6 +168,7 @@ fun! s:init()
   if !exists('g:vwm#safe_mode')
     let g:vwm#safe_mode = 0
   endif
+  let g:vwm#active = 1
 endfun
 
 call s:init()
@@ -133,3 +179,4 @@ command! -nargs=+ VwmClose call vwm#close(<f-args>)
 command! -nargs=+ VwmToggle call vwm#toggle(<f-args>)
 command! -nargs=0 VwmList call vwm#list_active()
 command! -nargs=0 VwmRefresh call vwm#repop_active(v:null)
+command! -nargs=0 VwmClsoeAll call vwm#close_all()

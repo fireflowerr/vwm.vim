@@ -18,16 +18,12 @@ fun! vwm#toggle(...)
 endfun
 
 fun! s:close(name)
-  if type(a:name) == 1
-    let l:node_index = util#lookup_node(a:name)
-    if l:node_index == -1
-      return -1
-    endif
-    let l:node = g:vwm#layouts[l:node_index]
-  elseif type(a:name) == 4
-    let l:node = a:name
-  else
-    let l:err = 'unsupported type ' . type(a:name)
+  let l:node = s:getNode(a:name)
+
+  if util#node_has_child(l:node, 'float')
+    call s:close_helper(l:node.cache, l:node.float, v:null, v:null)
+    let l:node.active = 0
+    return 0
   endif
 
   call util#execute_cmds(l:node.clsBfr)
@@ -38,7 +34,7 @@ fun! s:close(name)
   call util#execute_cmds(l:node.clsAftr)
 
   if g:vwm#safe_mode
-    call vwm#repop_active(v:null)
+    call vwm#repop_active()
   endif
 endfun
 
@@ -57,19 +53,25 @@ fun! s:deactivate(node)
   let a:node['active'] = 0
 endfun
 
-fun! s:open(name)
-  if type(a:name) == 1
-    let l:nodeIndex = util#lookup_node(a:name)
+fun! s:getNode(node)
+  if type(a:node) == 1
+    let l:nodeIndex = util#lookup_node(a:node)
     if l:nodeIndex == -1
       return -1
     endif
-    let l:node = g:vwm#layouts[l:nodeIndex]
-  elseif type(a:name) == 4
-    let l:node = a:name
+    return g:vwm#layouts[l:nodeIndex]
+  elseif type(a:node) == 4
+    return a:node
   else
-    let l:err = 'unsupported type ' . type(a:name)
+    let l:err = 'unsupported type ' . type(a:node)
     echoerr l:err
+    return -1
   endif
+  return -1
+endfun
+
+fun! s:open(name)
+  let l:node = s:getNode(a:name)
 
   call util#execute_cmds(l:node.opnBfr)
 
@@ -77,17 +79,39 @@ fun! s:open(name)
   let l:node.active = 1
 
   if g:vwm#safe_mode
-    call vwm#repop_active(l:node)
+    call vwm#repop_active()
   else
-    call vwm#repop_active(l:node, l:node)
+    call vwm#repop_active(l:node)
+  endif
+
+  if util#node_has_child(l:node, 'float')
+    call s:pop_float(l:node.float)
   endif
 endfun
 
-fun! vwm#repop_active(node, ...)
+fun! s:pop_float(node)
+  tabnew
+  let a:node.bid = s:place_content(a:node)
+  tabclose
+
+  call nvim_open_win(a:node.bid, a:node.focus,
+        \   { 'relative': util#get_lazy(a:node.relative)
+        \   , 'row': util#get_lazy(a:node.y)
+        \   , 'col': util#get_lazy(a:node.x)
+        \   , 'width': util#get_lazy(a:node.width)
+        \   , 'height': util#get_lazy(a:node.height)
+        \   , 'focusable': util#get_lazy(a:node.focusable)
+        \   , 'anchor': util#get_lazy(a:node.anchor)
+        \   }
+        \ )
+endfun
+
+" Closes the target node
+fun! vwm#repop_active(...)
   let l:FClose = function('s:close_helper', [1])
   let l:FDct = function('s:deactivate')
 
-  if len(a:000)
+  if a:000 != [v:null] && len(a:000)
     let l:active = a:000
   else
     let l:active = util#active_nodes()
@@ -212,9 +236,9 @@ fun! s:toggle(name)
   endif
 endfun
 
-fun! s:close_all()
+fun! vwm#close_all()
   for node in util#active_nodes()
-    call s:close_main(node, node.cache)
+    call s:close(node)
   endfor
 endfun
 

@@ -28,6 +28,8 @@ COMMANDS                                                    *vwm.vim-commands*
 :VwmList
   Echos a message containing a list of all active layouts.
 
+:VwmCloseAll
+  Close all active layouts.
 ==============================================================================
 CONFIGURATION                                          *vwm.vim-configuration*
 
@@ -75,7 +77,6 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   NOTE: Windows are created from layouts using a depth first traversal of the
   layout definition. The order of depths traversed is as follows: left ->
   right -> top -> bot.
-
                                                             *vwm-layouts-root*
   Each layout consists of a root node and 1 or more child nodes, where each
   node is a dictionary. A root node contains the following attributes:
@@ -111,14 +112,14 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
 
-  {'init'}: A list of commands to run on buffer creation. Accepts Strings and
+  {init}: A list of commands to run on buffer creation. Accepts Strings and
   Funcrefs.
 
-  {'restore'}[opt]: A list of commands to run on buffer restoration. Accepts Strings a
+  {restore}[opt]: A list of commands to run on buffer restoration. Accepts Strings a
   nd
   Funcrefs.
 
-  {'sz'}[opt]: The size of the window. Default to half of the current window.
+  {sz}[opt]: The size of the window. Default to half of the current window.
 
   {left}[opt]: Layout left relative of this layout.
 
@@ -130,6 +131,35 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {focus}[default=0]: If true, this node's window will be focused at the end
   of layout realization.
+
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
+  For more info see `:help hidden-options` .
+
+                                                           *vwm-layouts-float*
+  Floating windows require a supporting version of neovim. Verify that
+  `echo exists('*nvim_open_win')` is true. Each attribute may be lazily
+  defined via funcref. Each floating layout contains the following
+  attributes:
+  NOTE: The values here are a simple wrapper around the parameters of
+  *nvim_open_win()* .
+
+  {x}[req]: The x coordinate to place the window corner defined by anchor.
+
+  {y}[req]: The y coordinate to place the window corner defined by anchor.
+
+  {width}[req]: The width of the floating window.
+
+  {height}[req]: The height of the floating window.
+
+  {relative}[default=editor]: Use the coordinate space of the editor or the
+  current window. The other possible value is `win`.
+
+  {focusable}[default=1]: If true, the floating window is focusable.
+
+  {focus}[default=0]: If true, the floating window will be focused.
+
+  {anchor}[default=NW]: The corner to place at coordinates (x, y). Other
+  values include `NE`, `SW`, `SE`.
 
   {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
   For more info see `:help hidden-options` .

@@ -169,3 +169,10 @@ fun! util#execute_cmds(cmds)
     endif
   endfor
 endfun
+
+fun! util#get_lazy(Val)
+  if type(a:Val) == 2
+    return a:Val()
+  else
+    return a:Val
+endfun
