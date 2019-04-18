@@ -44,7 +44,7 @@ fun! s:close_helper(cache, node, t1, t2)
       execute(bufwinnr(a:node.bid) . 'wincmd w')
       close
     else
-      execute(a:node.bid . 'bw')
+      execute(a:node.bid . 'bw!')
     endif
   endif
 endfun
@@ -85,23 +85,27 @@ fun! s:open(name)
   endif
 
   if util#node_has_child(l:node, 'float')
-    call s:pop_float(l:node.float)
+    call s:pop_float(l:node)
   endif
+
+  call util#execute_cmds(l:node.opnAftr)
+
 endfun
 
 fun! s:pop_float(node)
   tabnew
-  let a:node.bid = s:place_content(a:node)
+  call s:buf_mktmp()
+  let a:node.float.bid = s:place_content(a:node.float)
   tabclose
 
-  call nvim_open_win(a:node.bid, a:node.focus,
-        \   { 'relative': util#get_lazy(a:node.relative)
-        \   , 'row': util#get_lazy(a:node.y)
-        \   , 'col': util#get_lazy(a:node.x)
-        \   , 'width': util#get_lazy(a:node.width)
-        \   , 'height': util#get_lazy(a:node.height)
-        \   , 'focusable': util#get_lazy(a:node.focusable)
-        \   , 'anchor': util#get_lazy(a:node.anchor)
+  call nvim_open_win(a:node.float.bid, a:node.float.focus,
+        \   { 'relative': util#get_lazy(a:node.float.relative)
+        \   , 'row': util#get_lazy(a:node.float.y)
+        \   , 'col': util#get_lazy(a:node.float.x)
+        \   , 'width': util#get_lazy(a:node.float.width)
+        \   , 'height': util#get_lazy(a:node.float.height)
+        \   , 'focusable': util#get_lazy(a:node.float.focusable)
+        \   , 'anchor': util#get_lazy(a:node.float.anchor)
         \   }
         \ )
 endfun
@@ -165,7 +169,6 @@ fun! s:update_node(node, def)
     if exists('a:node.fid')
       execute(bufwinnr(a:node.fid) . 'wincmd w')
     endif
-    call util#execute_cmds(a:node.opnAftr)
   endif
 endfun
 
