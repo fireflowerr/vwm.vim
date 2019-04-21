@@ -34,7 +34,7 @@ fun! s:close(name)
   call util#execute_cmds(l:node.clsAftr)
 
   if g:vwm#safe_mode
-    call vwm#repop_active()
+    call vwm#resize()
   endif
 endfun
 
@@ -109,6 +109,27 @@ fun! s:pop_float(node)
         \   }
         \ )
 endfun
+
+fun! vwm#resize(...)
+  let l:Fbfr = function('s:resz_wrap')
+  if a:000 != [v:null] && len(a:000)
+    let l:active = a:000
+  else
+    let l:active = util#active_nodes()
+  endif
+  for anode in l:active
+    call util#traverse(anode, v:null, v:null, l:Fbfr, v:null, 1, 1)
+  endfor
+
+endfun
+
+fun! s:resz_wrap(node, ori, fromRoot)
+  if util#buf_active(a:node["bid"])
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    call util#resz_winnode(a:node, a:ori)
+  endif
+endfun
+
 
 " Closes the target node
 fun! vwm#repop_active(...)
@@ -195,7 +216,11 @@ fun! s:populate_root(node, ori)
 
 endfun
 
-fun! s:populate_child(node, ori)
+fun! s:populate_child(node, ori, fromRoot)
+  if a:fromRoot
+    return 0
+  endif
+
   if a:ori == 1
     vert abo new
   elseif a:ori == 2

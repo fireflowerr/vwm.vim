@@ -125,10 +125,8 @@ fun! util#traverse(node, fRprime, fRAftr, fBfr, fAftr, h, v)
 endfun
 
 fun! s:traverse_main(node, fBfr, fAftr, ori, fromRoot)
-  if !a:fromRoot
-    if !(a:fBfr is v:null)
-      call a:fBfr(a:node, a:ori)
-    endif
+  if !(a:fBfr is v:null)
+    call a:fBfr(a:node, a:ori, a:fromRoot)
   endif
 
  let l:bid = bufnr('%')
