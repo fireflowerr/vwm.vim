@@ -1,22 +1,23 @@
 *vwm.vim.txt*
-                                                                      *vwm.vim*
+                                                                      *vwm*
 
 ==============================================================================
-CONTENTS                                                    *vwm.vim-contents*
-  1. Commands...............................................|vwm.vim-commands|
-  2. Configuration.....................................|vwm.vim-configuration|
-  3. Examples...............................................|vwm.vim-examples|
+CONTENTS                                                    *vwm-contents*
+  1. Commands...............................................|vwm-commands|
+  2. Configuration.....................................|vwm-configuration|
+  3. Functions.............................................|vwm-functions|
+  3. Examples...............................................|vwm-examples|
 ==============================================================================
-COMMANDS                                                    *vwm.vim-commands*
+COMMANDS                                                    *vwm-commands*
 
-:VwmOpen {name}
-  Opens the layout specified by {name}
+:VwmOpen {names}
+  Opens the layout(s) specified by {name}
 
-:VwmClose {name}
-  Closes the layout specified by {name}
+:VwmClose {names}
+  Closes the layout(s) specified by {name}
 
-:VwmToggle {name}
-  Toggles the layout specified by {name}
+:VwmToggle {names}
+  Toggles the layout(s) specified by {name}
 
 :VwmRefresh
   Repopulates all layouts. Can be used to reformat all open layouts back to
@@ -25,29 +26,22 @@ COMMANDS                                                    *vwm.vim-commands*
 :VwmReinit
   After manual changes to g:vwm#layouts, call to re-normalize the dictionary.
 
-:VwmList
-  Echos a message containing a list of all active layouts.
-
 :VwmCloseAll
   Close all active layouts.
 ==============================================================================
-CONFIGURATION                                          *vwm.vim-configuration*
+CONFIGURATION                                          *vwm-configuration*
 
-g:vwm#safe_mode                                              *g:vwm#safe_mode*
-  If true, adds an optimized VwmRefresh inbetween layout openings and
-  closings. May cause a noticable drop in performance. Consider using this
-  if you use many different layouts and find yourself running VwmRefresh
-  often.
+g:vwm#pop_order                                              *g:vwm#pop_order*
+  Population order. Controls how vwm populates layouts.
+  Values:
+    'both'[default] -> Layouts will be realized in a single group of
+      traversals. This option should give the best performance.
+    'vert' -> Layouts will be realized in two groups of traversals. First
+      vertical splits will be populated, then horizontal splits.
+    'horz' -> Layouts will be realized in two groups of traversals. First
+      horizontal splits will be populated, then vertical splits.
 
-g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
-  Requires |g:vwm#safe_mode| = 1. If true force vertical nodes to overlay horizantal. See below for
-  a visual
-  example.
-  NOTE: This may option may reduce performance as it necessarily causes two
-    additional traversals over the layout tree.
-          >
-
-    g:vwm#force_vert_first = 0
+  g:vwm#pop_order = 'vert' >
     ____________________
     |     |            |
     |     |            |
@@ -58,8 +52,8 @@ g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
     |------------------|
     |  win 1  | win 2  |
     |_________|________|
-
-    g:vwm#force_vert_first = 1
+<
+  g:vwm#pop_order = 'horz' >
     ____________________
     |     |            |
     |     |            |
@@ -74,14 +68,16 @@ g:vwm#force_vert_first[default=0]                     *g:vwm#force_vert_first*
 g:vwm#layouts                                                  *g:vwm#layouts*
   A list containing layouts accessible to this plugin. See |vwm-layouts| and
   |vwm-layouts-example|.
-  NOTE: Windows are created from layouts using a depth first traversal of the
-  layout definition. The order of depths traversed is as follows: left ->
-  right -> top -> bot.
+  NOTE: Windows are created from layouts using a depth first traversal of
+  the layout definition. The order of depths traversed is as follows:
+  left -> right -> top -> bot.
+  NOTE: Each node attribute will accept a funcref in addition to it's type.
+  If a funcref is passed the value will be computed lazily.
                                                             *vwm-layouts-root*
   Each layout consists of a root node and 1 or more child nodes, where each
   node is a dictionary. A root node contains the following attributes:
 
-  {name}: The name of a layout definition. Used in |:VwmOpen| and |:VwmClose|
+  {name}: The name of a layout definition. Used in `:VwmOpen` and `:VwmClose`
 
   {left}[opt]: Layouts originating from the left, relative or absolute.
 
@@ -91,35 +87,47 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {bot}[opt]: Layouts originating from the bot, relative or absolute.
 
-  {abs}[default=1]: If true, seed layouts from absolute position (as opposed
-  to relative from the active window)
-
-  {cache}[default=1]: If true, save buffers closed with |:VwmClose| and
-  attempt to reuse cached buffer when |:VwmOpen| is next called.
-
-  {opnBfr}[default=[]]: A list of commands or funcrefs to be executed before opening a
+  {opnBfr}[opt]: A list of commands to be executed before opening a
   given layout.
 
-  {openAftr}[deault=[]]: A list of commands or funcrefs to be executed before opening
+  {openAftr}[opt]: A list of commands to be executed before opening
   a given layout.
 
-  {clsBfr}[default=[]]: A list of commands or funcrefs to be executed before closing a
+  {clsBfr}[opt]: A list of commands to be executed before closing a
   given layout.
 
-  {clsAftr}[deault=[]]: A list of commands or funcrefs to be executed before closing
+  {clsAftr}[opt]: A list of commands to be executed before closing
   given layout.
+
+  {init}[opt]: A list of commands to run on buffer creation. Accepts Strings
+  and funcrefs.
+
+  {restore}[opt] A list of commands to run on buffer restoration. Accepts
+  Strings and funcrefs.
+
+  {focus}[default=0]: If true, this node's window will be focused at the end
+  of layout realization.
                                                            *vwm-layouts-child*
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
+  apply.
+  For more info see |hidden-options|
+
   Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
 
-  {init}: A list of commands to run on buffer creation. Accepts Strings and
-  Funcrefs.
+  {init}[opt]: A list of commands to run on buffer creation. Accepts Strings
+  and funcrefs.
 
-  {restore}[opt]: A list of commands to run on buffer restoration. Accepts Strings a
-  nd
-  Funcrefs.
+  {restore}[opt]: A list of commands to run on buffer restoration. Accepts
+  Strings and funcrefs.
 
-  {sz}[opt]: The size of the window. Default to half of the current window.
+  {v_sz}[opt]: Sets the width of the node window (same as vert resize).
+
+  {h_sz}[opt]: Sets the height of the node window (same as resize).
+
+  {abs}[default=true if direct descendent of root otherwise false]. If true
+  , the window represented by this node will be place absolutely as opposed
+  to relatively in the direction of it's orientation.
 
   {left}[opt]: Layout left relative of this layout.
 
@@ -132,7 +140,8 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {focus}[default=0]: If true, this node's window will be focused at the end
   of layout realization.
 
-  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
+  apply.
   For more info see |hidden-options|
 
                                                            *vwm-layouts-float*
@@ -161,9 +170,37 @@ g:vwm#layouts                                                  *g:vwm#layouts*
   {anchor}[default=NW]: The corner to place at coordinates (x, y). Other
   values include `NE`, `SW`, `SE`.
 
-  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to apply.
-  For more info see |hidden-options| .
+  {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
+  apply. For more info see |hidden-options| .
 
 ==============================================================================
-EXAMPLES                                                    *vwm.vim-examples*
-see https://github.com/paroxayte/vwm.vim#examples
+FUNCTIONS                                                  *vwm-functions*
+
+vwm#open(...)
+  Opens the layouts passed by name or by dictionary.
+
+vwm#close(...)
+  Closes the layouts passed by name or by dictionary.
+
+vwm#toggle(...)
+  Toggles the layouts passed by name or by dictionary.
+
+vwm#resize(...)
+  Resizes a root node(s) and all of its children to their defined size.
+  To resize all nodes when closing a window try >
+    au! BufDelete * call vwm#resize(vwm#util#active())
+
+vwm#refresh()
+  Toggles all active layouts twice.
+
+vwm#util#active()
+  Lists all active layout nodes
+
+vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
+  For developers. The heart of vwm.vim. This function is a depth-first
+  traverse and do. It allows a series of actions to be performed
+  recursively over a node and its children. See source code for thorough
+  documentation.
+==============================================================================
+EXAMPLES                                                    *vwm-examples*
+see https://github.com/paroxayte/vwm#examples
