@@ -41,6 +41,9 @@ fun! s:normalize_root(node)
   if !exists('a:node.set')
     let a:node['set'] = []
   endif
+  if !exists('a:node.set_all')
+    let a:node['set_all'] = []
+  endif
   "TODO: Cache is the same as setlocal bh=wipe, make that clear.
   if util#node_has_child(a:node, 'left')
     call s:inject_abs(a:node.left)

@@ -116,6 +116,7 @@ fun! s:open_helper_bfr(node, type, cache)
   if a:type == 0
     call s:execute(s:get(a:node.opnBfr))
     let a:cache.init_bid= bufnr('%')
+    let a:cache.set_all = a:node.set_all
   endif
 
   " Create new windows as needed. Float is a special case that cannot be handled here.
@@ -145,12 +146,21 @@ fun! s:open_helper_aftr(node, type, cache)
   " Otherwise capture the buffer and move it to the current window
   else
     execute(bufwinnr(l:init_buf) . 'wincmd w')
-    let a:node.bid = s:capture_buf(a:node, a:type, a:cache.init_bid)
+    let a:node.bid = s:capture_buf(a:node, a:type)
 
     if !s:buf_active(a:node.bid)
       call s:place_buf(a:node, a:type)
     endif
 
+  endif
+
+  " apply node.set as setlocal
+  if !empty(a:node.set)
+    call s:set_buf(a:node.set)
+  endif
+
+  if !empty(a:cache.set_all)
+    call s:set_buf(a:cache.set_all)
   endif
 
   " Whatever the last occurrence of focus is will be focused
@@ -219,7 +229,7 @@ endfun
 
 " Create the buffer, close it's window, and capture it!
 " Using tabnew prevents unwanted resizing
-fun! s:capture_buf(node, type, init_bid)
+fun! s:capture_buf(node, type)
   "If there are no commands to run, stop
   if !len(a:node.init)
     return bufnr('%')
@@ -227,16 +237,12 @@ fun! s:capture_buf(node, type, init_bid)
 
   if a:type
     tabnew
-    call s:mk_tmp()
   endif
-
-  execute(a:init_bid . 'b')
 
   let l:init_win = winnr()
   let l:init_last = bufwinnr('$')
   call s:execute(s:get(a:node.init))
-  " apply node.set as setlocal
-  call s:set_buf(a:node)
+
   let l:final_last = bufwinnr('$')
 
   if l:init_last != l:final_last
@@ -249,8 +255,9 @@ fun! s:capture_buf(node, type, init_bid)
 
   if a:type
     set ei=BufDelete
-    tabclose
-    set ei=
+    let l:ei = &ei
+    call s:close_tab()
+    execute('set ei=' . l:ei)
   endif
 
   call s:apply_tab_vars(l:t_v)
@@ -282,14 +289,12 @@ fun! s:mk_tmp()
 endfun
 
 " Apply setlocal entries
-fun! s:set_buf(node)
-  if len(a:node.set)
-    let l:set_cmd = 'setlocal'
-    for val in s:get(a:node['set'])
-      let l:set_cmd = l:set_cmd . ' ' . val
-    endfor
-    execute(l:set_cmd)
-  endif
+fun! s:set_buf(set)
+  let l:set_cmd = 'setlocal'
+  for val in s:get(a:set)
+    let l:set_cmd = l:set_cmd . ' ' . val
+  endfor
+  execute(l:set_cmd)
 endfun
 
 " Resize some or all nodes.
@@ -334,5 +339,11 @@ endfun
 fun! s:apply_tab_vars(vars)
   for l:v in keys(a:vars)
     execute('let ' . l:v . ' = a:vars[l:v]')
+  endfor
+endfun
+
+fun! s:close_tab()
+  for l:bid in tabpagebuflist()
+    execute(bufwinnr(l:bid) . 'hide')
   endfor
 endfun
