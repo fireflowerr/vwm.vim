@@ -13,7 +13,7 @@
 fun! vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
 
   if !(a:bfr is v:null)
-    call vwm#util#execute(a:bfr, a:target, a:node_type, a:cache)
+    call s:execute(a:bfr, a:target, a:node_type, a:cache)
   endif
 
   let l:bnr = bufnr('%')
@@ -50,7 +50,7 @@ fun! vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
   endif
 
   if !(a:aftr is v:null)
-    call vwm#util#execute(a:aftr, a:target, a:node_type, a:cache)
+    call s:execute(a:aftr, a:target, a:node_type, a:cache)
     execute(bufwinnr(l:bnr) . 'wincmd w')
   endif
 
@@ -68,7 +68,7 @@ endfun
 
 " If a funcref is given, execute the function. Else assume list of strings
 " Arity arg represents a list of arguments to be passed to the funcref
-fun! vwm#util#execute(target, ...)
+fun! s:execute(target, ...)
   if type(a:target) == 2
     let l:Vwm_Target = s:apply_funcref(a:target, a:000)
     call l:Vwm_Target()
@@ -99,7 +99,7 @@ fun! s:apply_funcref(f, args)
 endfun
 
 " If Target is a funcref, return it's result. Else return Target.
-fun! vwm#util#get(Target)
+fun! s:get(Target)
   if type(a:Target) == 2
     return a:Target()
   else
@@ -122,12 +122,12 @@ fun! vwm#util#lookup(name)
 endfun
 
 " Returns true if the buffer exists in a currently visable window
-fun! vwm#util#buf_active(bid)
+fun! s:buf_active(bid)
   return bufwinnr(a:bid) == -1 ? v:false : v:true
 endfun
 
 " Returns true if the buffer exists
-fun! vwm#util#buf_exists(bid)
+fun! s:buf_exists(bid)
   return bufname(a:bid) =~ '^$' ? v:false : v:true
 endfun
 
@@ -142,4 +142,13 @@ fun! vwm#util#active()
 
   endfor
   return l:active
+endfun
+
+" So I can break up the script into multiple parts without exposing multiple public functions
+fun! vwm#util#SID()
+  return s:SID()
+endfun
+
+fun! s:SID()
+  return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
 endfun

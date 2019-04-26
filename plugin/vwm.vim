@@ -152,7 +152,10 @@ fun! s:normalize()
 
 endfun
 
+" Initialize vwm.vim
 call s:normalize()
+call vwm#init()
+let g:vwm#active = 1
 
 "------------------------------------------public commands------------------------------------------
 command! VwmReinit call s:normalize()

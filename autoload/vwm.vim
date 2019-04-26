@@ -1,5 +1,23 @@
 " vwm.vim core
 
+"----------------------------------------------Imports----------------------------------------------
+" Imports from vwm#util. Can easliy generalize later if need be
+fun! s:import(...)
+
+    if a:000 != [v:null] && len(a:000)
+      let l:util_snr = vwm#util#SID()
+
+      for l:fname in a:000
+        execute('let s:' . l:fname . ' = function("<SNR>' . l:util_snr . '_' . l:fname . '")')
+      endfor
+
+    endif
+endfun
+
+fun! vwm#init()
+  call s:import('execute', 'get', 'buf_active', 'buf_exists')
+endfun
+
 "------------------------------------------Command backers------------------------------------------
 fun! vwm#close(...)
   for l:target in a:000
@@ -48,10 +66,10 @@ endfun
 " Because the originating buffer is considered a root node, closing it blindly is undesirable.
 fun! s:close_helper(node, type, cache)
   if a:type == 0
-    call vwm#util#execute(vwm#util#get(a:node.clsAftr))
+    call s:execute(s:get(a:node.clsAftr))
 
   else
-    if vwm#util#buf_active(a:node["bid"])
+    if s:buf_active(a:node["bid"])
       execute(bufwinnr(a:node.bid) . 'wincmd w')
       close
     endif
@@ -96,7 +114,8 @@ endfun
 
 fun! s:open_helper_bfr(node, type, cache)
   if a:type == 0
-    call vwm#util#execute(vwm#util#get(a:node.opnBfr))
+    call s:execute(s:get(a:node.opnBfr))
+    let a:cache.init_bid= bufnr('%')
   endif
 
   " Create new windows as needed. Float is a special case that cannot be handled here.
@@ -120,28 +139,27 @@ endfun
 fun! s:open_helper_aftr(node, type, cache)
   let l:init_buf = bufnr('%')
 
-  " If the window is already open for this node, do nothing.
-  if vwm#util#buf_active(a:node.bid)
-    return a:node.bid
-  endif
-
   " If buf exists, place it in current window and kill tmp buff
-  if vwm#util#buf_exists(a:node.bid) && !vwm#util#buf_active(a:node.bid)
+  if s:buf_exists(a:node.bid)
     call s:restore_content(a:node)
   " Otherwise capture the buffer and move it to the current window
   else
     execute(bufwinnr(l:init_buf) . 'wincmd w')
-    let a:node.bid = s:capture_buf(a:node, a:type)
-    call s:place_buf(a:node, a:type)
+    let a:node.bid = s:capture_buf(a:node, a:type, a:cache.init_bid)
+
+    if !s:buf_active(a:node.bid)
+      call s:place_buf(a:node, a:type)
+    endif
+
   endif
 
   " Whatever the last occurrence of focus is will be focused
-  if vwm#util#get(a:node.focus)
+  if s:get(a:node.focus)
     let a:cache.focus = a:node.bid
   endif
 
   if a:type == 0
-    call vwm#util#execute(vwm#util#get(a:node.opnAftr))
+    call s:execute(s:get(a:node.opnAftr))
   endif
 
   return bufnr('%')
@@ -196,20 +214,27 @@ endfun
 
 fun! s:restore_content(node)
   execute(a:node.bid . 'b')
-  call vwm#util#execute(vwm#util#get(a:node.restore))
+  call s:execute(s:get(a:node.restore))
 endfun
 
 " Create the buffer, close it's window, and capture it!
 " Using tabnew prevents unwanted resizing
-fun! s:capture_buf(node, type)
+fun! s:capture_buf(node, type, init_bid)
+  "If there are no commands to run, stop
+  if !len(a:node.init)
+    return bufnr('%')
+  endif
 
   if a:type
     tabnew
+    call s:mk_tmp()
   endif
+
+  execute(a:init_bid . 'b')
 
   let l:init_win = winnr()
   let l:init_last = bufwinnr('$')
-  call vwm#util#execute(vwm#util#get(a:node.init))
+  call s:execute(s:get(a:node.init))
   " apply node.set as setlocal
   call s:set_buf(a:node)
   let l:final_last = bufwinnr('$')
@@ -220,9 +245,15 @@ fun! s:capture_buf(node, type)
     let l:ret = winbufnr(l:init_win)
   endif
 
+  let l:t_v = s:get_tab_vars()
+
   if a:type
+    set ei=BufDelete
     tabclose
+    set ei=
   endif
+
+  call s:apply_tab_vars(l:t_v)
 
   return l:ret
 
@@ -231,14 +262,14 @@ endfun
 " Places the target node buffer in the current window
 fun! s:place_buf(node, type)
   if a:type == 5
-    call nvim_open_win(a:node.bid, vwm#util#get(a:node.focus),
-          \   { 'relative': vwm#util#get(a:node.relative)
-          \   , 'row': vwm#util#get(a:node.y)
-          \   , 'col': vwm#util#get(a:node.x)
-          \   , 'width': vwm#util#get(a:node.width)
-          \   , 'height': vwm#util#get(a:node.height)
-          \   , 'focusable': vwm#util#get(a:node.focusable)
-          \   , 'anchor': vwm#util#get(a:node.anchor)
+    call nvim_open_win(a:node.bid, s:get(a:node.focus),
+          \   { 'relative': s:get(a:node.relative)
+          \   , 'row': s:get(a:node.y)
+          \   , 'col': s:get(a:node.x)
+          \   , 'width': s:get(a:node.width)
+          \   , 'height': s:get(a:node.height)
+          \   , 'focusable': s:get(a:node.focusable)
+          \   , 'anchor': s:get(a:node.anchor)
           \   }
           \ )
   else
@@ -254,7 +285,7 @@ endfun
 fun! s:set_buf(node)
   if len(a:node.set)
     let l:set_cmd = 'setlocal'
-    for val in vwm#util#get(a:node['set'])
+    for val in s:get(a:node['set'])
       let l:set_cmd = l:set_cmd . ' ' . val
     endfor
     execute(l:set_cmd)
@@ -264,11 +295,11 @@ endfun
 " Resize some or all nodes.
 fun! s:resize_node(node, type)
 
-  if vwm#util#get(a:node.v_sz)
-    execute('vert resize ' . vwm#util#get(a:node.v_sz))
+  if s:get(a:node.v_sz)
+    execute('vert resize ' . s:get(a:node.v_sz))
   endif
-  if vwm#util#get(a:node.h_sz)
-    execute('resize ' . vwm#util#get(a:node.h_sz))
+  if s:get(a:node.h_sz)
+    execute('resize ' . s:get(a:node.h_sz))
   endif
 
 endfun
@@ -278,10 +309,30 @@ fun! s:resize_helper(node, type, cache)
 
   if  a:type >= 1 && a:type <= 4
 
-    if vwm#util#buf_active(a:node.bid)
+    if s:buf_active(a:node.bid)
       execute(bufwinnr(a:node.bid) . 'wincmd w')
       call s:resize_node(a:node, a:type)
     endif
 
   endif
+endfun
+
+fun! s:get_tab_vars()
+  let l:tab_raw = execute('let t:')
+  let l:tab_vars = split(l:tab_raw, '\n')
+
+  let l:ret = {}
+  for l:v in l:tab_vars
+    let l:v_name = substitute(l:v, '\(\S\+\).*', '\1', 'g')
+    execute('let l:tmp = ' . l:v_name)
+    let l:ret[l:v_name] = l:tmp
+  endfor
+
+  return l:ret
+endfun
+
+fun! s:apply_tab_vars(vars)
+  for l:v in keys(a:vars)
+    execute('let ' . l:v . ' = a:vars[l:v]')
+  endfor
 endfun
