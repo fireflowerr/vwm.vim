@@ -15,7 +15,7 @@ fun! s:import(...)
 endfun
 
 fun! vwm#init()
-  call s:import('execute', 'get', 'buf_active', 'buf_exists')
+  call s:import('execute', 'get', 'buf_active', 'wipe_aux_bufs', 'get_active_bufs')
 endfun
 
 "------------------------------------------Command backers------------------------------------------
@@ -32,9 +32,9 @@ fun! vwm#open(...)
 endfun
 
 fun! vwm#toggle(...)
-  for l:target in a:000
-    call s:toggle(l:target)
-  endfor
+  if a:000 != [v:null] && len(a:000)
+    call call('s:toggle', a:000)
+  endif
 endfun
 
 fun! vwm#resize(...)
@@ -51,7 +51,6 @@ fun! vwm#refresh()
 endfun
 
 "-----------------------------------------Layout population-----------------------------------------
-
 " Target can be a root node or root node name
 " TODO: Indictate the autocmd replacement available for safe_mode. QuitPre autocmd event
 fun! s:close(target)
@@ -80,42 +79,45 @@ endfun
 " Opens layout node by name or by dictionary def. DIRECTLY MUTATES DICT
 fun! s:open(...)
 
-  for l:t in a:000
+  let l:cache = {}
+  if g:vwm#pop_order == 'both'
+    for l:t in a:000
 
-    let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
-    let l:cache = {}
+      let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
+      let l:target.active = 1
 
-    " If both populate layout in one traversal. Else do either vert or horizontal before the other
-    if g:vwm#pop_order == 'both'
+      call s:execute(s:get(l:target.opnBfr))
+      " If both populate layout in one traversal. Else do either vert or horizontal before the other
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
             \, v:true, v:true, 0, l:cache)
+      call s:execute(s:get(l:target.opnAftr))
 
-    elseif g:vwm#pop_order == 'vert'
+    endfor
+
+  else
+    let l:vert = g:vwm#pop_order == 'vert'
+
+    for l:t in a:000
+      let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
+      call s:execute(s:get(l:target.opnBfr))
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, v:true, v:false, 0, l:cache)
+            \,!l:vert, l:vert, 0, l:cache)
+    endfor
+
+    for l:t in a:000
+      let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
+      let l:target.active = 1
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, v:false, v:true, 0, l:cache)
+            \, l:vert, !l:vert, 0, l:cache)
+      call s:execute(s:get(l:target.opnAftr))
+    endfor
 
-    elseif g:vwm#pop_order == 'horz'
-      call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, v:false, v:true, 0, l:cache)
-      call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, v:true, v:false, 0, l:cache)
+  endif
 
-    endif
-
-    if exists('l:cache.focus')
-      execute(bufwinnr(l:cache.focus) . 'wincmd w')
-    endif
-
-    let l:target.active = 1
-  endfor
 endfun
 
 fun! s:open_helper_bfr(node, type, cache)
   if a:type == 0
-    call s:execute(s:get(a:node.opnBfr))
-    let a:cache.init_bid= bufnr('%')
     let a:cache.set_all = a:node.set_all
   endif
 
@@ -141,7 +143,7 @@ fun! s:open_helper_aftr(node, type, cache)
   let l:init_buf = bufnr('%')
 
   " If buf exists, place it in current window and kill tmp buff
-  if s:buf_exists(a:node.bid)
+  if bufexists(a:node.bid)
     call s:restore_content(a:node)
   " Otherwise capture the buffer and move it to the current window
   else
@@ -168,20 +170,36 @@ fun! s:open_helper_aftr(node, type, cache)
     let a:cache.focus = a:node.bid
   endif
 
-  if a:type == 0
-    call s:execute(s:get(a:node.opnAftr))
+  if a:type == 0 && g:vwm#eager_render
+    redraw
   endif
 
   return bufnr('%')
 endfun
 
-fun! s:toggle(target)
-  let l:target = type(a:target) == 1 ? vwm#util#lookup(a:target) : a:target
-  if l:target.active
-    call s:close(l:target)
-  else
-    call s:open(l:target)
+fun! s:toggle(...)
+  let l:on = []
+  let l:off = []
+
+  for l:entry in a:000
+
+    let l:target = type(l:entry) == 1 ? vwm#util#lookup(l:entry) : l:entry
+    if l:target.active
+      let l:on += [l:target]
+    else
+      let l:off += [l:target]
+    endif
+
+  endfor
+
+  if !empty(l:on)
+    call call('vwm#close', l:on)
   endif
+
+  if !empty(l:off)
+    call call('vwm#open', l:off)
+  endif
+
 endfun
 
 " Resize a root node and all of its children
@@ -191,7 +209,6 @@ fun! s:resize(target)
 endfun
 
 "---------------------------------------------Auxiliary---------------------------------------------
-
 fun! s:new_abs_win(type)
   if a:type == 1
     vert to new
@@ -235,9 +252,10 @@ fun! s:capture_buf(node, type)
     return bufnr('%')
   endif
 
-  if a:type
-    tabnew
-  endif
+  let l:init_bufs = s:get_active_bufs()
+
+  tabnew
+  let l:tmp_bid = bufnr('%')
 
   let l:init_win = winnr()
   let l:init_last = bufwinnr('$')
@@ -247,18 +265,18 @@ fun! s:capture_buf(node, type)
 
   if l:init_last != l:final_last
     let l:ret = winbufnr(l:final_last)
+    execute(l:tmp_bid . 'bw')
   else
     let l:ret = winbufnr(l:init_win)
   endif
 
   let l:t_v = s:get_tab_vars()
 
-  if a:type
-    set ei=BufDelete
-    let l:ei = &ei
-    call s:close_tab()
-    execute('set ei=' . l:ei)
-  endif
+  set ei=BufDelete
+  let l:ei = &ei
+  call s:close_tab()
+  call s:wipe_aux_bufs(l:init_bufs, l:ret)
+  execute('set ei=' . l:ei)
 
   call s:apply_tab_vars(l:t_v)
 
@@ -343,6 +361,7 @@ fun! s:apply_tab_vars(vars)
 endfun
 
 fun! s:close_tab()
+  let l:tid = tabpagenr()
   for l:bid in tabpagebuflist()
     execute(bufwinnr(l:bid) . 'hide')
   endfor
