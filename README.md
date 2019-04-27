@@ -29,13 +29,13 @@ A layout manager for vim and nvim.
 
 **_note:_** For detailed configuration see `help: vwm.vim`.
 ### layouts
-**[definitions](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/4abe97a75ab5a19b114d011226344b4a40fce716/layouts.vim)**
+**[definitions](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/719fca8fbdaccfddd76a02fe4d443f4a201979aa/layouts.vim)**
 ![](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/4abe97a75ab5a19b114d011226344b4a40fce716/layouts.gif)
 
 ### command buffer regrouping
 *vwm can take commands that open a new window, and incorporate that window in to a defined layout*
 
-The following example will make use of the wonderful [NERDTree plugin](https://github.com/scrooloose/nerdtree) and the equally wonderful [Tagbar plugin](https://github.com/majutsushi/tagbar).
+The following example will make use of the wonderful [NERDTree plugin](https://github.com/scrooloose/nerdtree) and the equally wonderful [Vista plugin](https://github.com/liuchengxu/vista.vim).
 
-**[definitions](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/4abe97a75ab5a19b114d011226344b4a40fce716/dev_panel.vim)**
-![](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/4abe97a75ab5a19b114d011226344b4a40fce716/bufsteal.gif)
+**[definitions](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/719fca8fbdaccfddd76a02fe4d443f4a201979aa/dev_panel.vim)**
+![](https://gist.githubusercontent.com/paroxayte/003aa6e0925ae601e4febb607710a3c5/raw/8342f85e792aef68f1946cc49761c968e88bcf6a/bufsteal.gif)

@@ -31,6 +31,10 @@ COMMANDS                                                    *vwm-commands*
 ==============================================================================
 CONFIGURATION                                          *vwm-configuration*
 
+g:vwm#eager_render[default=v:false]                       *g:vwm#eager_render*
+  If true, redraw after layout opening. May increase the smoothness of
+  layout population.
+
 g:vwm#pop_order                                              *g:vwm#pop_order*
   Population order. Controls how vwm populates layouts.
   Values:
@@ -107,10 +111,14 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {focus}[default=0]: If true, this node's window will be focused at the end
   of layout realization.
-                                                           *vwm-layouts-child*
+
+  {set_all}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
+  apply to this node and all of its child nodes.
+
   {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
-  apply.
-  For more info see |hidden-options|
+  apply. For more info see |hidden-options|
+
+                                                           *vwm-layouts-child*
 
   Each child node consists of itself and 0 more child nodes. A child node
   contains the following attributes.
@@ -142,8 +150,6 @@ g:vwm#layouts                                                  *g:vwm#layouts*
 
   {set}[default=['bh=hide', 'nobl']]: A list of bufferlocal settings to
   apply.
-  For more info see |hidden-options|
-
                                                            *vwm-layouts-float*
   Floating windows require a supporting version of neovim. Verify that
   `echo exists('*nvim_open_win')` is true. Each attribute may be lazily

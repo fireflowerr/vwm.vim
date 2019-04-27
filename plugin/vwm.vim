@@ -9,6 +9,24 @@ if !exists('g:vwm#eager_render')
   let g:vwm#eager_render = v:false
 endif
 
+let s:def_layt = {
+      \  'name': 'default',
+      \  'set_all': ['nonu', 'nornu'],
+      \  'bot':
+      \  {
+      \    'h_sz': 12,
+      \    'init': ['term bash'],
+      \    'left':
+      \    {
+      \      'init': ['term bash']
+      \    }
+      \  }
+      \}
+
+if !exists('g:vwm#layouts')
+  let g:vwm#layouts = [s:def_layt]
+endif
+
 "------------------------------------Normalize node attribrutes-------------------------------------
 " Root must be normalized before any child nodes
 fun! s:normalize_root(node)
