@@ -126,11 +126,6 @@ fun! s:buf_active(bid)
   return bufwinnr(a:bid) == -1 ? v:false : v:true
 endfun
 
-" Returns true if the buffer exists
-fun! s:buf_exists(bid)
-  return bufname(a:bid) =~ '^$' ? v:false : v:true
-endfun
-
 " Retruns a list of all active layouts
 fun! vwm#util#active()
   let l:active = []
@@ -142,6 +137,29 @@ fun! vwm#util#active()
 
   endfor
   return l:active
+endfun
+
+" ... = ignore
+fun! s:wipe_aux_bufs(ls_init, ...)
+  for l:bid in s:get_active_bufs()
+if index(a:ls_init, l:bid) < 0 && index(a:000, l:bid) < 0
+      execute(l:bid . 'bw')
+    endif
+
+  endfor
+endfun
+
+fun! s:get_active_bufs()
+  let l:ret = []
+  for l:bid in range(1, bufnr('$'))
+
+    if bufexists(l:bid)
+      let l:ret += [l:bid]
+    endif
+
+  endfor
+
+  return l:ret
 endfun
 
 " So I can break up the script into multiple parts without exposing multiple public functions

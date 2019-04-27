@@ -4,6 +4,11 @@
 if !exists('g:vwm#pop_order')
   let g:vwm#pop_order = 'both'
 endif
+
+if !exists('g:vwm#eager_render')
+  let g:vwm#eager_render = v:false
+endif
+
 "------------------------------------Normalize node attribrutes-------------------------------------
 " Root must be normalized before any child nodes
 fun! s:normalize_root(node)
