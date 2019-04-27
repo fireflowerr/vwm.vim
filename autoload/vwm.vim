@@ -114,6 +114,9 @@ fun! s:open(...)
 
   endif
 
+  if exists('l:cache.focus')
+    execute(bufwinnr(l:cache.focus) . 'wincmd w')
+  endif
 endfun
 
 fun! s:open_helper_bfr(node, type, cache)
