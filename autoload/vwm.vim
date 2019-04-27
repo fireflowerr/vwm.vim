@@ -159,13 +159,13 @@ fun! s:open_helper_aftr(node, type, cache)
 
   endif
 
+  if !empty(a:cache.set_all)
+    call s:set_buf(a:cache.set_all)
+  endif
+
   " apply node.set as setlocal
   if !empty(a:node.set)
     call s:set_buf(a:node.set)
-  endif
-
-  if !empty(a:cache.set_all)
-    call s:set_buf(a:cache.set_all)
   endif
 
   " Whatever the last occurrence of focus is will be focused
