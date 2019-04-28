@@ -1,4 +1,5 @@
 " vwm.vim core
+" TODO: Bug -> <Space>t <Space>t <Space>o <Space>t
 
 "----------------------------------------------Imports----------------------------------------------
 " Imports from vwm#util. Can easliy generalize later if need be
@@ -251,7 +252,12 @@ endfun
 " Using tabnew prevents unwanted resizing
 fun! s:capture_buf(node, type)
   "If there are no commands to run, stop
-  if !len(a:node.init)
+  if empty(a:node.init)
+    "If the root has no init, assume it's not meant to be part of the layout def.
+    if !a:type
+      return -1
+    endif
+
     return bufnr('%')
   endif
 
@@ -289,6 +295,11 @@ endfun
 
 " Places the target node buffer in the current window
 fun! s:place_buf(node, type)
+  " If the root node is not part of layout do not place
+  if !a:type && empty(a:node.init)
+    return 0
+  endif
+
   if a:type == 5
     call nvim_open_win(a:node.bid, s:get(a:node.focus),
           \   { 'relative': s:get(a:node.relative)
