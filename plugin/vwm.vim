@@ -173,7 +173,7 @@ fun! s:normalize()
 
   for l:node in g:vwm#layouts
     call vwm#util#traverse(l:node, function('s:normalize_helper'), v:null
-          \, v:true, v:true, 0, {})
+          \, v:true, v:true, v:true, 0, {})
   endfor
 
 endfun

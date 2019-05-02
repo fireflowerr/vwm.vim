@@ -57,7 +57,7 @@ endfun
 fun! s:close(target)
   let l:target = type(a:target) == 1 ? vwm#util#lookup(a:target) : a:target
   call vwm#util#traverse(l:target, l:target.clsBfr, function('s:close_helper')
-        \, v:true, v:true, 0, {})
+        \, v:true, v:true, v:true, 0, {})
 
   let l:target.active = 0
 endfun
@@ -71,7 +71,7 @@ fun! s:close_helper(node, type, cache)
   else
     if s:buf_active(a:node["bid"])
       execute(bufwinnr(a:node.bid) . 'wincmd w')
-      close
+      hide
     endif
 
   endif
@@ -90,7 +90,7 @@ fun! s:open(...)
       call s:execute(s:get(l:target.opnBfr))
       " If both populate layout in one traversal. Else do either vert or horizontal before the other
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, v:true, v:true, 0, l:cache)
+            \, v:true, v:true, v:true, 0, l:cache)
       call s:execute(s:get(l:target.opnAftr))
 
     endfor
@@ -102,14 +102,14 @@ fun! s:open(...)
       let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
       call s:execute(s:get(l:target.opnBfr))
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \,!l:vert, l:vert, 0, l:cache)
+            \,!l:vert, l:vert, v:false, 0, l:cache)
     endfor
 
     for l:t in a:000
       let l:target = type(l:t) == 1 ? vwm#util#lookup(l:t) : l:t
       let l:target.active = 1
       call vwm#util#traverse(l:target, function('s:open_helper_bfr'), function('s:open_helper_aftr')
-            \, l:vert, !l:vert, 0, l:cache)
+            \, l:vert, !l:vert, v:true, 0, l:cache)
       call s:execute(s:get(l:target.opnAftr))
     endfor
 
@@ -118,15 +118,15 @@ fun! s:open(...)
   if exists('l:cache.focus')
     execute(bufwinnr(l:cache.focus) . 'wincmd w')
   endif
+
 endfun
 
 fun! s:open_helper_bfr(node, type, cache)
   if a:type == 0
     let a:cache.set_all = a:node.set_all
-  endif
-
   " Create new windows as needed. Float is a special case that cannot be handled here.
-  if a:type >= 1 && a:type <= 4
+
+  elseif a:type >= 1 && a:type <= 4
 
     " If abs use absolute positioning else use relative
     if a:node.abs
@@ -138,6 +138,7 @@ fun! s:open_helper_bfr(node, type, cache)
     " Make window proper size
     call s:mk_tmp()
     call s:resize_node(a:node, a:type)
+
   endif
 
 endfun
@@ -160,13 +161,14 @@ fun! s:open_helper_aftr(node, type, cache)
 
   endif
 
-  if !empty(a:cache.set_all)
-    call s:set_buf(a:cache.set_all)
-  endif
 
   " apply node.set as setlocal
   if !empty(a:node.set)
     call s:set_buf(a:node.set)
+  endif
+
+  if !empty(a:cache.set_all)
+    call s:set_buf(a:cache.set_all)
   endif
 
   " Whatever the last occurrence of focus is will be focused
@@ -261,9 +263,8 @@ fun! s:capture_buf(node, type)
     return bufnr('%')
   endif
 
-  let l:init_bufs = s:get_active_bufs()
-
   tabnew
+  let l:init_bufs = s:get_active_bufs()
   let l:tmp_bid = bufnr('%')
 
   let l:init_win = winnr()
@@ -379,4 +380,7 @@ fun! s:close_tab()
   for l:bid in tabpagebuflist()
     execute(bufwinnr(l:bid) . 'hide')
   endfor
+  if l:tid == tabpagenr()
+    tabclose
+  endif
 endfun

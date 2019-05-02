@@ -10,7 +10,7 @@
 " If horz is true traverse top and bot, if vert is true traverse left and right
 " node_type = { 0: 'root', 1: 'left', 2: 'right', 3: 'top', 4: 'bot', 5: 'float }
 " Cache is an empty dictionary for saving special info through recursion
-fun! vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
+fun! vwm#util#traverse(target, bfr, aftr, horz, vert, float, node_type, cache)
 
   if !(a:bfr is v:null)
     call s:execute(a:bfr, a:target, a:node_type, a:cache)
@@ -22,11 +22,11 @@ fun! vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
   if a:vert
 
     if util#node_has_child(a:target, 'left')
-      call vwm#util#traverse(a:target.left, a:bfr, a:aftr, v:true, v:true, 1, a:cache)
+      call vwm#util#traverse(a:target.left, a:bfr, a:aftr, v:true, v:true, v:true, 1, a:cache)
       execute(bufwinnr(l:bnr) . 'wincmd w')
     endif
     if util#node_has_child(a:target, 'right')
-      call vwm#util#traverse(a:target.right, a:bfr, a:aftr, v:true, v:true, 2, a:cache)
+      call vwm#util#traverse(a:target.right, a:bfr, a:aftr, v:true, v:true, v:true, 2, a:cache)
       execute(bufwinnr(l:bnr) . 'wincmd w')
     endif
 
@@ -35,18 +35,22 @@ fun! vwm#util#traverse(target, bfr, aftr, horz, vert, node_type, cache)
   if a:horz
 
     if util#node_has_child(a:target, 'top')
-      call vwm#util#traverse(a:target.top, a:bfr, a:aftr, v:true, v:true, 3, a:cache)
+      call vwm#util#traverse(a:target.top, a:bfr, a:aftr, v:true, v:true, v:true, 3, a:cache)
       execute(bufwinnr(l:bnr) . 'wincmd w')
     endif
     if util#node_has_child(a:target, 'bot')
-      call vwm#util#traverse(a:target.bot, a:bfr, a:aftr, v:true, v:true, 4, a:cache)
+      call vwm#util#traverse(a:target.bot, a:bfr, a:aftr, v:true, v:true, v:true, 4, a:cache)
       execute(bufwinnr(l:bnr) . 'wincmd w')
     endif
 
   endif
 
-  if util#node_has_child(a:target, 'float')
-    call vwm#util#traverse(a:target.float, a:bfr, a:aftr, v:true, v:true, 5, a:cache)
+  if a:float
+
+    if util#node_has_child(a:target, 'float')
+      call vwm#util#traverse(a:target.float, a:bfr, a:aftr, v:true, v:true, v:true, 5, a:cache)
+    endif
+
   endif
 
   if !(a:aftr is v:null)
