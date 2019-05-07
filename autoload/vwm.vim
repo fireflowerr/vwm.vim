@@ -60,21 +60,21 @@ fun! s:close(target)
         \, v:true, v:true, v:true, 0, {})
 
   let l:target.active = 0
+
+  if exists('a:target.clsAftr') && !empty(a:target.clsAftr)
+    call s:execute(s:get(a:target.clsAftr))
+  endif
 endfun
 
 
 " Because the originating buffer is considered a root node, closing it blindly is undesirable.
 fun! s:close_helper(node, type, cache)
-  if a:type == 0
-    call s:execute(s:get(a:node.clsAftr))
 
-  else
-    if s:buf_active(a:node["bid"])
-      execute(bufwinnr(a:node.bid) . 'wincmd w')
-      hide
-    endif
-
+  if s:buf_active(a:node["bid"])
+    execute(bufwinnr(a:node.bid) . 'wincmd w')
+    hide
   endif
+
 endfun
 
 " Opens layout node by name or by dictionary def. DIRECTLY MUTATES DICT
@@ -149,7 +149,7 @@ fun! s:open_helper_aftr(node, type, cache)
 
   " If buf exists, place it in current window and kill tmp buff
   if bufexists(a:node.bid)
-    call s:restore_content(a:node)
+    call s:restore_content(a:node, a:type)
   " Otherwise capture the buffer and move it to the current window
   else
     execute(bufwinnr(l:init_buf) . 'wincmd w')
@@ -245,7 +245,11 @@ fun! s:new_std_win(type)
   endif
 endfun
 
-fun! s:restore_content(node)
+fun! s:restore_content(node, type)
+  if a:type == 5
+    call s:open_float_win(a:node)
+   endif
+
   execute(a:node.bid . 'b')
   call s:execute(s:get(a:node.restore))
 endfun
@@ -302,19 +306,23 @@ fun! s:place_buf(node, type)
   endif
 
   if a:type == 5
-    call nvim_open_win(a:node.bid, s:get(a:node.focus),
-          \   { 'relative': s:get(a:node.relative)
-          \   , 'row': s:get(a:node.y)
-          \   , 'col': s:get(a:node.x)
-          \   , 'width': s:get(a:node.width)
-          \   , 'height': s:get(a:node.height)
-          \   , 'focusable': s:get(a:node.focusable)
-          \   , 'anchor': s:get(a:node.anchor)
-          \   }
-          \ )
+    call s:open_float_win(a:node)
   else
     execute(a:node.bid . 'b')
   endif
+endfun
+
+fun! s:open_float_win(node)
+  call nvim_open_win(a:node.bid, s:get(a:node.focus),
+        \   { 'relative': s:get(a:node.relative)
+        \   , 'row': s:get(a:node.y)
+        \   , 'col': s:get(a:node.x)
+        \   , 'width': s:get(a:node.width)
+        \   , 'height': s:get(a:node.height)
+        \   , 'focusable': s:get(a:node.focusable)
+        \   , 'anchor': s:get(a:node.anchor)
+        \   }
+        \ )
 endfun
 
 fun! s:mk_tmp()
