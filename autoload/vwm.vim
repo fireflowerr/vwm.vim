@@ -1,5 +1,4 @@
 " vwm.vim core
-" TODO: Bug -> <Space>t <Space>t <Space>o <Space>t
 
 "----------------------------------------------Imports----------------------------------------------
 " Imports from vwm#util. Can easliy generalize later if need be
